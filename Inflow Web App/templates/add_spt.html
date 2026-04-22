@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add SPT</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">    <style>
+        body { font-family: 'Inter', sans-serif; font-size: 0.9rem; color: #1a1a2e; background: #f8fafc; }
+        .form-section-title {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: #6b7280;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 14px;
+        }
+        .form-label { font-weight: 500; font-size: 0.82rem; color: #374151; margin-bottom: 4px; }
+        .readonly-box {
+            background: #f3f4f6;
+            color: #6b7280;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+            padding: 0.35rem 0.75rem;
+            min-height: 36px;
+            display: flex;
+            align-items: center;
+            font-size: 0.87rem;
+        }
+        .form-column {
+            flex: 0 0 50%;
+            padding-right: 15px;
+        }
+        .formula-column {
+            flex: 0 0 50%;
+            padding-left: 15px;
+        }
+        .formula-box {
+            background: #f0f7ff;
+            border-left: 4px solid #0078d4;
+            padding: 15px;
+            border-radius: 4px;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+        .formula-label {
+            font-weight: bold;
+            color: #0078d4;
+            margin-bottom: 10px;
+        }
+        .formula-line {
+            margin: 8px 0;
+            font-family: monospace;
+            color: #333;
+        }
+        .formula-result {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #0078d4;
+            font-weight: bold;
+            color: #0074d9;
+            font-size: 1.1em;
+        }
+    </style>
+
+</head>
+<body>
+<div class="container py-4" style="max-width:860px;">
+    <div class="mb-3 pb-2" style="border-bottom:2px solid #1f7f7c;">
+        <h5 class="mb-0 fw-bold" style="color:#1f7f7c;"><i class="bi bi-plus-circle me-2"></i>Add SPT Entry</h5>
+    </div>
+    <div style="display: flex; gap: 24px;">
+        <!-- Left column for form -->
+        <div class="form-column">
+            <form method="post" id="addSptForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-3">
+                    <label class="form-label">Year Endorsed</label>
+                    <select name="year_endorsed" class="form-select form-select-sm" required>
+                        {% for y in range(2025, 2030) %}
+                        <option value="{{ y }}">{{ y }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Month Endorsed</label>
+                    <select name="month_endorsed" class="form-select form-select-sm" required>
+                        <option value="01">January</option>
+                        <option value="02">February</option>
+                        <option value="03">March</option>
+                        <option value="04">April</option>
+                        <option value="05">May</option>
+                        <option value="06">June</option>
+                        <option value="07">July</option>
+                        <option value="08">August</option>
+                        <option value="09">September</option>
+                        <option value="10">October</option>
+                        <option value="11">November</option>
+                        <option value="12">December</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Date Endorsed</label>
+                    <select name="day_endorsed" class="form-select form-select-sm" required>
+                        {% for day in range(1, 32) %}
+                        <option value="{{ '%02d'|format(day) }}">{{ day }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Content Type</label>
+                    <select name="content_type" id="content_type_select" class="form-select form-select-sm" required>
+                        {% for cat in categories %}
+                        <option value="{{ cat }}">{{ cat }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">SPT</label>
+                    <div class="readonly-box" id="content_type_value"></div>
+                </div>
+                <script type="application/json" id="content_type_map">
+                    {{ category_map | tojson }}
+                </script>
+                <div class="mb-3">
+                    <label class="form-label">FTE Requirement</label>
+                    <input type="text" name="fte_requirement" id="fte_requirement" class="form-control form-control-sm readonly-box" value="" readonly>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Remaining FTE Capacity</label>
+                    <div class="readonly-box">{{ rem_fte }}</div>
+                    <input type="hidden" name="remaining_fte_capacity" value="{{ rem_fte }}">
+                </div>
+                <script type="application/json" id="frequency_settings">
+                    {{ frequency_settings | tojson }}
+                </script>
+                <div class="mb-3">
+                    <label class="form-label">Frequency</label>
+                    <select name="frequency" id="frequency" class="form-select form-select-sm" required>
+                        <option value="Daily">Daily</option>
+                        <option value="Weekly">Weekly</option>
+                        <option value="Monthly">Monthly</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Average Volume</label>
+                    <input type="text" name="average_volume" id="average_volume" class="form-control form-control-sm" required>
+                </div>
+                <div class="mb-3" style="display:none;">
+                    <label>Working Minutes</label>
+                    <input type="text" name="working_minutes" id="working_minutes" class="form-control form-control-sm" value="109200" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Status</label>
+                    <select name="status" id="status_select" class="form-select form-select-sm" required>
+                        <option value="Inflow">Inflow</option>
+                        <option value="Outflow">Outflow</option>
+                    </select>
+                </div>
+                <div class="d-flex gap-2 mt-3">
+                    <button type="submit" class="btn btn-primary btn-sm px-4"><i class="bi bi-check2 me-1"></i>Add</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.parent.postMessage('closeModal', '*')">Cancel</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Right column for real-time formula -->
+        <div class="formula-column">
+            <div class="formula-box">
+                <div class="formula-label">FTE Requirement Calculation</div>
+                <div class="formula-line">
+                    <strong>Formula:</strong><br>
+                    (Average Volume × SPT) / Working Minutes
+                </div>
+                <div class="formula-line" style="margin-top: 12px;">
+                    <strong>Values:</strong><br>
+                    Average Volume: <span id="preview_avgvol">0</span><br>
+                    SPT: <span id="preview_spt">0</span><br>
+                    Working Minutes: <span id="preview_workmin">0</span>
+                </div>
+                <div class="formula-result">
+                    Result: <span id="preview_result">0.00</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const frequencySelect = document.getElementById('frequency');
+        const workingMinutesInput = document.getElementById('working_minutes');
+        const avgVolInput = document.getElementById('average_volume');
+        const fteRequirementInput = document.getElementById('fte_requirement');
+        const contentTypeSelect = document.getElementById('content_type_select');
+        const contentTypeValue = document.getElementById('content_type_value');
+        const statusSelect = document.getElementById('status_select');        const categoryMap = JSON.parse(document.getElementById('content_type_map').textContent);
+        const frequencySettings = JSON.parse(document.getElementById('frequency_settings').textContent);
+        
+        const frequencyValues = {
+            'Daily': frequencySettings['Daily'] || 109200,
+            'Weekly': frequencySettings['Weekly'] || 21840,
+            'Monthly': frequencySettings['Monthly'] || 5040
+        };        function updateWorkingMinutes() {
+            const selectedFrequency = frequencySelect.value;
+            workingMinutesInput.value = frequencyValues[selectedFrequency];
+            updateFTERequirement();
+        }        function updateFTERequirement() {
+            fteRequirementInput.readOnly = true;
+            fteRequirementInput.classList.add('readonly-box');
+            fteRequirementInput.placeholder = '';
+            const avgVol = parseFloat(avgVolInput.value) || 0;
+            const spt = parseFloat(contentTypeValue.textContent) || 0;
+            const workingMinutes = parseFloat(workingMinutesInput.value) || 1;
+            const fte = workingMinutes ? (avgVol * spt) / workingMinutes : 0;
+            // Match server rounding: math.ceil(fte * 100) / 100
+            const fteCeiled = Math.ceil(fte * 100) / 100;
+            const isOutflow = statusSelect && statusSelect.value === 'Outflow';
+            const fteDisplay = isOutflow ? -fteCeiled : fteCeiled;
+            fteRequirementInput.value = fteDisplay.toFixed(2);
+
+            // Update real-time formula display
+            document.getElementById('preview_avgvol').textContent = avgVol.toFixed(0);
+            document.getElementById('preview_spt').textContent = spt.toFixed(2);
+            document.getElementById('preview_workmin').textContent = workingMinutes.toFixed(0);
+            document.getElementById('preview_result').textContent = fteDisplay.toFixed(2);
+        }
+
+        function updateContentTypeValue() {
+            const selectedContentType = contentTypeSelect.value;
+            contentTypeValue.textContent = categoryMap[selectedContentType] || '';
+            updateFTERequirement();
+        }        frequencySelect.addEventListener('change', updateWorkingMinutes);
+        avgVolInput.addEventListener('input', updateFTERequirement);
+        contentTypeSelect.addEventListener('change', updateContentTypeValue);
+        statusSelect.addEventListener('change', updateFTERequirement);
+
+        // Initial calls to set values on page load
+        updateContentTypeValue();
+        updateWorkingMinutes();
+        updateFTERequirement();
+    });
+
+    window.addEventListener('message', function(event) {
+        if (event.data === 'closeModal') {
+            window.close();
+        }
+    });
+    // Close modal on successful submit
+    const form = document.getElementById('addSptForm');
+    form.addEventListener('submit', function() {
+        setTimeout(function() {
+            window.parent.postMessage('closeModal', '*');
+        }, 100);
+    });
+</script>
+</body>
+</html>

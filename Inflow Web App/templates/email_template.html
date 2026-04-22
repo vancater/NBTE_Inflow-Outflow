@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Dashboard Metrics</h2>
+    <table>
+        <tr>
+            <td>Headcount</td>
+            <td>{{ metrics.headcount }}</td>
+        </tr>
+        <tr>
+            <td>FTE Requirement</td>
+            <td>{{ metrics.total_fte }}</td>
+        </tr>
+        <tr>
+            <td>Total Inflow (FTE)</td>
+            <td>{{ metrics.total_inflow }}</td>
+        </tr>
+        <tr>
+            <td>Efficiencies (FTE)</td>
+            <td>{{ metrics.eff_total }}</td>
+        </tr>
+        <tr>
+            <td>{% if metrics.overstaffed %}OVERSTAFFED{% else %}UNDERSTAFFED{% endif %}</td>
+            <td>{{ metrics.diff }}</td>
+        </tr>
+    </table>
+
+    <h2>SPT Table</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Year Endorsed</th>
+                <th>Content Type</th>
+                <th>FTE Requirement</th>
+                <th>Frequency</th>
+                <th>SPT</th>
+                <th>Average Volume</th>
+                <th>Working Minutes</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in spt_rows %}
+                <tr>
+                    <td>{{ row[1] }}</td>
+                    <td>{{ row[2] }}</td>
+                    <td>{{ row[3] }}</td>
+                    <td>{{ row[5] }}</td>
+                    <td>{{ row[6] }}</td>
+                    <td>{{ row[7] }}</td>
+                    <td>{{ row[8] }}</td>
+                    <td>{{ row[9] }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Efficiencies</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Project Title</th>
+                <th>Generated Capacity</th>
+                <th>Project Type</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in eff_rows %}
+                <tr>
+                    <td>{{ row[1] }}</td>
+                    <td>{{ row[2] }}</td>
+                    <td>{{ row[3] }}</td>
+                    <td>{{ row[4] }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Content Type Summary</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Content Type</th>
+                <th>FTE Requirement</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ctype, fte in content_summary %}
+                <tr>
+                    <td>{{ ctype }}</td>
+                    <td>{{ fte }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</body>
+</html>

@@ -60,7 +60,7 @@
             const select = document.getElementById('content_type_select');
             const valueMap = JSON.parse(document.getElementById('content_type_map').textContent);
             const val = valueMap[select.value] || '';
-            document.getElementById('spt_value').textContent = val;
+            document.getElementById('spt_value').value = val;
         }
     </script>
 </head>
@@ -79,16 +79,16 @@
                 {% set edit_month = ym_parts[1] if ym_parts|length > 1 else '01' %}
                 {% set edit_day = ym_parts[2] if ym_parts|length > 2 else '01' %}
                 <div class="mb-3">
-                    <label class="form-label">Year Endorsed</label>
-                    <select name="year_endorsed" class="form-select form-select-sm" required>
+                    <label for="edit_spt_year_endorsed" class="form-label">Year Endorsed</label>
+                    <select name="year_endorsed" id="edit_spt_year_endorsed" class="form-select form-select-sm" required>
                         {% for y in range(2025, 2030) %}
                         <option value="{{ y }}" {% if edit_year|int == y %}selected{% endif %}>{{ y }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Month Endorsed</label>
-                    <select name="month_endorsed" class="form-select form-select-sm" required>
+                    <label for="edit_spt_month_endorsed" class="form-label">Month Endorsed</label>
+                    <select name="month_endorsed" id="edit_spt_month_endorsed" class="form-select form-select-sm" required>
                         <option value="01" {% if edit_month == '01' %}selected{% endif %}>January</option>
                         <option value="02" {% if edit_month == '02' %}selected{% endif %}>February</option>
                         <option value="03" {% if edit_month == '03' %}selected{% endif %}>March</option>
@@ -104,8 +104,8 @@
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Date Endorsed</label>
-                    <select name="day_endorsed" class="form-select form-select-sm" required>
+                    <label for="edit_spt_day_endorsed" class="form-label">Date Endorsed</label>
+                    <select name="day_endorsed" id="edit_spt_day_endorsed" class="form-select form-select-sm" required>
                         {% for day in range(1, 32) %}
                         {% set day_value = '%02d'|format(day) %}
                         <option value="{{ day_value }}" {% if edit_day == day_value %}selected{% endif %}>{{ day }}</option>
@@ -113,7 +113,7 @@
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Content Type</label>
+                    <label for="content_type_select" class="form-label">Content Type</label>
                     <select name="content_type" id="content_type_select" class="form-select form-select-sm" required>
                         {% for cat in categories %}
                         <option value="{{ cat }}" {% if row[2] == cat %}selected{% endif %}>{{ cat }}</option>
@@ -121,24 +121,24 @@
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">SPT</label>
-                    <div class="readonly-box" id="spt_value"></div>
+                    <label for="spt_value" class="form-label">SPT</label>
+                    <input type="text" id="spt_value" class="form-control form-control-sm readonly-box" value="" readonly>
                 </div>
                 <script type="application/json" id="content_type_map">
                     {{ category_map | tojson }}
                 </script>
                 <div class="mb-3">
-                    <label class="form-label">FTE Requirement</label>
+                    <label for="fte_requirement" class="form-label">FTE Requirement</label>
                     <input type="text" name="fte_requirement" id="fte_requirement" class="form-control form-control-sm readonly-box" value="{{ row[3] }}" readonly>
                 </div>                <div class="mb-3">
-                    <label class="form-label">Remaining FTE Capacity</label>
-                    <div class="readonly-box">{{ rem_fte }}</div>
+                    <label for="edit_spt_remaining_fte_display" class="form-label">Remaining FTE Capacity</label>
+                    <input type="text" id="edit_spt_remaining_fte_display" class="form-control form-control-sm readonly-box" value="{{ rem_fte }}" readonly>
                     <input type="hidden" name="remaining_fte_capacity" value="{{ rem_fte }}">
                 </div>
                 <script type="application/json" id="frequency_settings">
                     {{ frequency_settings | tojson }}
                 </script>                <div class="mb-3">
-                    <label class="form-label">Frequency</label>
+                    <label for="frequency_select" class="form-label">Frequency</label>
                     <select name="frequency" id="frequency_select" class="form-select form-select-sm" required>
                         <option value="Daily" {% if row[5] == 'Daily' %}selected{% endif %}>Daily</option>
                         <option value="Weekly" {% if row[5] == 'Weekly' %}selected{% endif %}>Weekly</option>
@@ -146,15 +146,15 @@
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Average Volume</label>
+                    <label for="average_volume" class="form-label">Average Volume</label>
                     <input type="text" name="average_volume" id="average_volume" class="form-control form-control-sm" value="{{ row[7] }}" required>
                 </div>
                 <div class="mb-3" style="display:none;">
-                    <label>Working Minutes</label>
+                    <label for="working_minutes">Working Minutes</label>
                     <input type="text" name="working_minutes" id="working_minutes" class="form-control form-control-sm" value="{{ row[8] }}" required>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Status</label>
+                    <label for="status_select" class="form-label">Status</label>
                     <select name="status" id="status_select" class="form-select form-select-sm" required>
                         <option value="Inflow" {% if row[9] == 'Inflow' %}selected{% endif %}>Inflow</option>
                         <option value="Outflow" {% if row[9] == 'Outflow' %}selected{% endif %}>Outflow</option>
@@ -214,9 +214,9 @@
             fteRequirementInput.readOnly = true;
             fteRequirementInput.classList.add('readonly-box');
             fteRequirementInput.placeholder = '';
-            const avgVol = parseFloat(avgVolInput.value) || 0;
-            const spt = parseFloat(contentTypeValue.textContent) || 0;
-            const workingMinutes = parseFloat(workingMinutesInput.value) || 1;
+            const avgVol = Number.parseFloat(avgVolInput.value) || 0;
+            const spt = Number.parseFloat(contentTypeValue.value) || 0;
+            const workingMinutes = Number.parseFloat(workingMinutesInput.value) || 1;
             const fte = workingMinutes ? (avgVol * spt) / workingMinutes : 0;
             // Match server rounding: math.ceil(fte * 100) / 100
             const fteCeiled = Math.ceil(fte * 100) / 100;
@@ -233,7 +233,7 @@
 
         function updateSPTValueAndFTE() {
             const selectedContentType = contentTypeSelect.value;
-            contentTypeValue.textContent = categoryMap[selectedContentType] || '';
+            contentTypeValue.value = categoryMap[selectedContentType] || '';
             updateFTERequirement();
         }        frequencySelect.addEventListener('change', updateWorkingMinutes);
         avgVolInput.addEventListener('input', updateFTERequirement);

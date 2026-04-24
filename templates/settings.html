@@ -71,24 +71,24 @@
     <form method="post" id="settingsForm">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="mb-3">
-            <label class="form-label">Headcount</label>
-            <input type="text" name="headcount" class="form-control" value="{{ headcount }}">
+            <label for="settings_headcount" class="form-label">Headcount</label>
+            <input type="text" name="headcount" id="settings_headcount" class="form-control" value="{{ headcount }}">
         </div>
         <div class="section-title"><i class="bi bi-clock me-1"></i>Working Minutes by Frequency</div>
         <div class="row mb-3">
             <div class="col-md-6">
-                <label class="form-label">Daily (minutes)</label>
-                <input type="text" name="frequency_Daily" class="form-control frequency-input" value="{{ frequency_settings.get('Daily', '109200') }}" placeholder="e.g., 109,200">
+                <label for="settings_frequency_daily" class="form-label">Daily (minutes)</label>
+                <input type="text" name="frequency_Daily" id="settings_frequency_daily" class="form-control frequency-input" value="{{ frequency_settings.get('Daily', '109200') }}" placeholder="e.g., 109,200">
             </div>
             <div class="col-md-6">
-                <label class="form-label">Weekly (minutes)</label>
-                <input type="text" name="frequency_Weekly" class="form-control frequency-input" value="{{ frequency_settings.get('Weekly', '21840') }}" placeholder="e.g., 21,840">
+                <label for="settings_frequency_weekly" class="form-label">Weekly (minutes)</label>
+                <input type="text" name="frequency_Weekly" id="settings_frequency_weekly" class="form-control frequency-input" value="{{ frequency_settings.get('Weekly', '21840') }}" placeholder="e.g., 21,840">
             </div>
         </div>
         <div class="row mb-3">
             <div class="col-md-6">
-                <label class="form-label">Monthly (minutes)</label>
-                <input type="text" name="frequency_Monthly" class="form-control frequency-input" value="{{ frequency_settings.get('Monthly', '5040') }}" placeholder="e.g., 5,040">
+                <label for="settings_frequency_monthly" class="form-label">Monthly (minutes)</label>
+                <input type="text" name="frequency_Monthly" id="settings_frequency_monthly" class="form-control frequency-input" value="{{ frequency_settings.get('Monthly', '5040') }}" placeholder="e.g., 5,040">
             </div>
         </div>
 
@@ -109,8 +109,8 @@
                 </div>
                 <div class="col-12">
                     <div class="spt-row-meta" id="sptRowMeta{{ loop.index0 }}">
-                        <label class="form-label mb-1">Comment for this SPT change</label>
-                        <textarea name="change_comment_{{ loop.index0 }}" class="form-control row-change-comment" rows="2" placeholder="Required when SPT is changed">{% if row_comments %}{{ row_comments.get(loop.index0, '') }}{% endif %}</textarea>
+                        <label for="change_comment_{{ loop.index0 }}" class="form-label mb-1">Comment for this SPT change</label>
+                        <textarea id="change_comment_{{ loop.index0 }}" name="change_comment_{{ loop.index0 }}" class="form-control row-change-comment" rows="2" placeholder="Required when SPT is changed">{% if row_comments %}{{ row_comments.get(loop.index0, '') }}{% endif %}</textarea>
                         <div class="row-comment-error">Comment is required for changed SPT rows.</div>
                     </div>
                 </div>
@@ -337,8 +337,8 @@ document.querySelectorAll('.spt-setting-row').forEach(row => upsertPendingHistor
 // Format numbers with commas on blur
 document.querySelectorAll('.frequency-input').forEach(input => {
     input.addEventListener('blur', function() {
-        const value = this.value.replace(/,/g, ''); // Remove existing commas
-        if (value && !isNaN(value)) {
+        const value = this.value.replaceAll(',', ''); // Remove existing commas
+        if (value && !Number.isNaN(Number(value))) {
             this.value = Number(value).toLocaleString('en-US');
         }
     });
@@ -376,7 +376,7 @@ document.getElementById('settingsForm').addEventListener('submit', function(e) {
     }
 
     document.querySelectorAll('.frequency-input').forEach(input => {
-        input.value = input.value.replace(/,/g, ''); // Remove commas before sending to server
+        input.value = input.value.replaceAll(',', ''); // Remove commas before sending to server
     });
 });
 </script>

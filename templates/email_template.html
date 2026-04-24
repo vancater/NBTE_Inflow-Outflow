@@ -1,6 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <title>Dashboard Email Report</title>
     <style>
         table {
             border-collapse: collapse;
@@ -20,6 +22,13 @@
 
     <h2>Dashboard Metrics</h2>
     <table>
+        <thead>
+            <tr>
+                <th scope="col">Metric</th>
+                <th scope="col">Value</th>
+            </tr>
+        </thead>
+        <tbody>
         <tr>
             <td>Headcount</td>
             <td>{{ metrics.headcount }}</td>
@@ -40,6 +49,7 @@
             <td>{% if metrics.overstaffed %}OVERSTAFFED{% else %}UNDERSTAFFED{% endif %}</td>
             <td>{{ metrics.diff }}</td>
         </tr>
+        </tbody>
     </table>
 
     <h2>SPT Table</h2>

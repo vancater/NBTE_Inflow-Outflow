@@ -1,13 +1,13 @@
 import os
 import secrets
-from flask import Flask
+from flask import Flask, request
 from dotenv import load_dotenv
 from routes import main_bp
-from auth import auth_bp
+from auth import auth_bp, validate_csrf_request
 
 load_dotenv()
 
-app = Flask(__name__)
+app = Flask(__name__)  # NOSONAR - CSRF is enforced globally in enforce_csrf_protection() for all state-changing requests.
 
 tenant_id = os.getenv('AZURE_TENANT_ID', '9274ee3f-9425-4109-a27f-9fb15c10675d')
 app_env = (os.getenv('APP_ENV') or os.getenv('FLASK_ENV') or 'production').strip().lower()
@@ -22,6 +22,9 @@ if not secret_key:
 
 app.config.from_mapping(
     SECRET_KEY=secret_key,
+    CSRF_ENABLED=True,
+    WTF_CSRF_ENABLED=True,
+    WTF_CSRF_CHECK_DEFAULT=True,
     ENV_NAME=app_env,
     IS_DEVELOPMENT=is_development,
     AZURE_TENANT_ID=tenant_id,
@@ -56,6 +59,17 @@ def _validate_security_config():
 
 
 _validate_security_config()
+
+
+@app.before_request
+def enforce_csrf_protection():
+    if request.method not in {'POST', 'PUT', 'PATCH', 'DELETE'}:
+        return None
+    if request.endpoint in {None, 'static'}:
+        return None
+    if not validate_csrf_request():
+        return 'Invalid CSRF token', 400
+    return None
 
 
 @app.after_request

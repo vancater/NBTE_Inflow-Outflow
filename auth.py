@@ -56,13 +56,16 @@ def _validate_csrf_token(token):
     return bool(token and stored and secrets.compare_digest(stored, token))
 
 
+def validate_csrf_request():
+    token = request.form.get('csrf_token') or request.headers.get('X-CSRF-Token')
+    return _validate_csrf_token(token)
+
+
 def csrf_protect(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        if request.method == 'POST':
-            token = request.form.get('csrf_token') or request.headers.get('X-CSRF-Token')
-            if not _validate_csrf_token(token):
-                return 'Invalid CSRF token', 400
+        if request.method in {'POST', 'PUT', 'PATCH', 'DELETE'} and not validate_csrf_request():
+            return 'Invalid CSRF token', 400
         return func(*args, **kwargs)
     return wrapper
 
@@ -78,6 +81,12 @@ def _is_safe_redirect_url(target):
     if target_parts.scheme or target_parts.netloc:
         return False
     return target.startswith('/')
+
+
+def _handle_auth_error(log_prefix):
+    current_app.logger.warning('%s', log_prefix)
+    flash('Login failed. Please try again or contact support if the issue persists.')
+    return redirect(url_for('auth.login'))
 
 
 def login_required(func):
@@ -133,8 +142,9 @@ def auth_callback():
         return redirect(url_for('auth.login'))
 
     if request.args.get('error'):
-        error_message = request.args.get('error_description') or request.args.get('error')
-        return f"Login error: {error_message}"
+        return _handle_auth_error(
+            'Authorization callback returned an error',
+        )
 
     code = request.args.get('code')
     if not code:
@@ -147,8 +157,9 @@ def auth_callback():
     )
 
     if 'error' in result:
-        error_message = result.get('error_description') or result.get('error')
-        return f"Login failed: {error_message}"
+        return _handle_auth_error(
+            'Token acquisition failed',
+        )
 
     claims = result.get('id_token_claims', {})
     roles = claims.get('roles', [])

@@ -21,28 +21,28 @@
     <form method="post" id="editEfficiencyForm">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="mb-3">
-            <label class="form-label">Year</label>
-            <input type="text" name="year" class="form-control" value="{{ row[5] }}" required>
+            <label for="edit_eff_year" class="form-label">Year</label>
+            <input type="text" name="year" id="edit_eff_year" class="form-control" value="{{ row[5] }}" required>
         </div>
         <div class="mb-3">
-            <label class="form-label">Project Title</label>
-            <input type="text" name="project_title" class="form-control" value="{{ row[1] }}" required>
+            <label for="edit_eff_project_title" class="form-label">Project Title</label>
+            <input type="text" name="project_title" id="edit_eff_project_title" class="form-control" value="{{ row[1] }}" required>
         </div>
         <div class="mb-3">
-            <label class="form-label">Generated Capacity</label>
-            <input type="text" name="generated_capacity" class="form-control" value="{{ row[2] }}" required>
+            <label for="edit_eff_generated_capacity" class="form-label">Generated Capacity</label>
+            <input type="text" name="generated_capacity" id="edit_eff_generated_capacity" class="form-control" value="{{ row[2] }}" required>
         </div>
         <div class="mb-3">
-            <label class="form-label">Category</label>
-            <select name="project_type" class="form-select" required>
+            <label for="edit_eff_project_type" class="form-label">Category</label>
+            <select name="project_type" id="edit_eff_project_type" class="form-select" required>
                 <option value="AI Agent" {% if row[3] == 'AI Agent' %}selected{% endif %}>AI Agent</option>
                 <option value="Automation" {% if row[3] == 'Automation' %}selected{% endif %}>Automation</option>
                 <option value="Other" {% if row[3] != 'AI Agent' and row[3] != 'Automation' %}selected{% endif %}>Other</option>
             </select>
         </div>
         <div class="mb-3">
-            <label class="form-label">Status</label>
-            <select name="status" class="form-select" required>
+            <label for="edit_eff_status" class="form-label">Status</label>
+            <select name="status" id="edit_eff_status" class="form-select" required>
                 <option value="Initiation" {% if row[4] == 'Initiation' %}selected{% endif %}>Initiation</option>
                 <option value="Development" {% if row[4] == 'Development' %}selected{% endif %}>Development</option>
                 <option value="Testing" {% if row[4] == 'Testing' %}selected{% endif %}>Testing</option>
@@ -53,93 +53,93 @@
             </select>
         </div>
         <div class="mb-3">
-            <label class="form-label">Content Process</label>
-            <input type="text" name="content_process" class="form-control" value="{{ row[15] if row|length > 15 else '' }}">
+            <label for="edit_eff_content_process" class="form-label">Content Process</label>
+            <input type="text" name="content_process" id="edit_eff_content_process" class="form-control" value="{{ row[15] if row|length > 15 else '' }}">
         </div>
         <div class="mb-3">
-            <label class="form-label">Project Owner</label>
-            <input type="text" name="project_owner" class="form-control" value="{{ row[6] if row|length > 6 else '' }}">
+            <label for="edit_eff_project_owner" class="form-label">Project Owner</label>
+            <input type="text" name="project_owner" id="edit_eff_project_owner" class="form-control" value="{{ row[6] if row|length > 6 else '' }}">
         </div>
         <div class="mb-3">
-            <label class="form-label">Description</label>
-            <textarea name="description" class="form-control" rows="2">{{ row[7] if row|length > 7 else '' }}</textarea>
+            <label for="edit_eff_description" class="form-label">Description</label>
+            <textarea name="description" id="edit_eff_description" class="form-control" rows="2">{{ row[7] if row|length > 7 else '' }}</textarea>
         </div>
         <div class="mb-3">
-            <label class="form-label">Planned Deployment</label>
+            <label for="planned_deployment" class="form-label">Planned Deployment</label>
             <input type="date" name="planned_deployment" id="planned_deployment" class="form-control" value="{{ row[8] if row|length > 8 else '' }}" required>
         </div>
         <div class="mb-3">
-            <label class="form-label">Actual Deployment</label>
+            <label for="actual_deployment" class="form-label">Actual Deployment</label>
             <input type="date" name="actual_deployment" id="actual_deployment" class="form-control" value="{{ row[22] if row|length > 22 else '' }}">
         </div>
         <div class="mb-3">
-            <label class="form-label">Savings</label>
+            <label for="edit_eff_savings" class="form-label">Savings</label>
             <div class="input-group">
                 <span class="input-group-text">$</span>
-                <input type="text" name="savings" class="form-control" value="{{ (row[9] if row|length > 9 else '').replace('$', '') }}" placeholder="0.00">
+                <input type="text" name="savings" id="edit_eff_savings" class="form-control" value="{{ (row[9] if row|length > 9 else '').replace('$', '') }}" placeholder="0.00">
             </div>
         </div>
         <div class="mb-3">
-            <label class="form-label">Team</label>
-            <select name="team" class="form-select" required>
+            <label for="edit_eff_team" class="form-label">Team</label>
+            <select name="team" id="edit_eff_team" class="form-select" required>
                 <option value="Entity" {% if row[10] == 'Entity' %}selected{% endif %}>Entity</option>
                 <option value="GNS" {% if row[10] == 'GNS' %}selected{% endif %}>GNS</option>
             </select>
         </div>
         <div class="mb-3">
-            <label class="form-label">Domestic/REPH</label>
-            <input type="text" name="domestic_reph" class="form-control" value="{{ row[12] if row|length > 12 else '' }}">
+            <label for="edit_eff_domestic_reph" class="form-label">Domestic/REPH</label>
+            <input type="text" name="domestic_reph" id="edit_eff_domestic_reph" class="form-control" value="{{ row[12] if row|length > 12 else '' }}">
         </div>
         <div class="mb-3">
-            <label class="form-label">GPTRAC</label>
-            <input type="text" name="gptrac" class="form-control" value="{{ row[13] if row|length > 13 else '' }}">
+            <label for="edit_eff_gptrac" class="form-label">GPTRAC</label>
+            <input type="text" name="gptrac" id="edit_eff_gptrac" class="form-control" value="{{ row[13] if row|length > 13 else '' }}">
         </div>
         <div class="mb-3">
-            <label class="form-label">Developer</label>
-            <input type="text" name="developer" class="form-control" value="{{ row[16] if row|length > 16 else '' }}">
+            <label for="edit_eff_developer" class="form-label">Developer</label>
+            <input type="text" name="developer" id="edit_eff_developer" class="form-control" value="{{ row[16] if row|length > 16 else '' }}">
         </div>
         <div class="mb-3">
-            <label class="form-label">PBD</label>
-            <select name="pbd" class="form-select">
+            <label for="edit_eff_pbd" class="form-label">PBD</label>
+            <select name="pbd" id="edit_eff_pbd" class="form-select">
                 <option value="" {% if not (row[17] if row|length > 17 else '') %}selected{% endif %}>Select</option>
                 <option value="Y" {% if row|length > 17 and row[17] == 'Y' %}selected{% endif %}>Y</option>
                 <option value="N" {% if row|length > 17 and row[17] == 'N' %}selected{% endif %}>N</option>
             </select>
         </div>
         <div class="mb-3">
-            <label class="form-label">SBD</label>
-            <select name="sbd" class="form-select">
+            <label for="edit_eff_sbd" class="form-label">SBD</label>
+            <select name="sbd" id="edit_eff_sbd" class="form-select">
                 <option value="" {% if not (row[18] if row|length > 18 else '') %}selected{% endif %}>Select</option>
                 <option value="Y" {% if row|length > 18 and row[18] == 'Y' %}selected{% endif %}>Y</option>
                 <option value="N" {% if row|length > 18 and row[18] == 'N' %}selected{% endif %}>N</option>
             </select>
         </div>
         <div class="mb-3">
-            <label class="form-label">BU Approved</label>
-            <select name="bu_approved" class="form-select">
+            <label for="edit_eff_bu_approved" class="form-label">BU Approved</label>
+            <select name="bu_approved" id="edit_eff_bu_approved" class="form-select">
                 <option value="" {% if not (row[19] if row|length > 19 else '') %}selected{% endif %}>Select</option>
                 <option value="Y" {% if row|length > 19 and row[19] == 'Y' %}selected{% endif %}>Y</option>
                 <option value="N" {% if row|length > 19 and row[19] == 'N' %}selected{% endif %}>N</option>
             </select>
         </div>
         <div class="mb-3">
-            <label class="form-label">UAT</label>
+            <div class="form-label">UAT</div>
             <div class="row g-2">
                 <div class="col-6">
-                    <input type="date" name="uat_from" class="form-control" value="{{ row[20] if row|length > 20 else '' }}" placeholder="From">
+                    <input type="date" name="uat_from" id="edit_eff_uat_from" class="form-control" value="{{ row[20] if row|length > 20 else '' }}" placeholder="From" aria-label="UAT From">
                 </div>
                 <div class="col-6">
-                    <input type="date" name="uat_to" class="form-control" value="{{ row[21] if row|length > 21 else '' }}" placeholder="To">
+                    <input type="date" name="uat_to" id="edit_eff_uat_to" class="form-control" value="{{ row[21] if row|length > 21 else '' }}" placeholder="To" aria-label="UAT To">
                 </div>
             </div>
         </div>
         <div class="mb-3">
-            <label class="form-label">Current End Phase</label>
-            <input type="date" name="phase_current_end" class="form-control" value="{{ row[23] if row|length > 23 else '' }}">
+            <label for="edit_eff_phase_current_end" class="form-label">Current End Phase</label>
+            <input type="date" name="phase_current_end" id="edit_eff_phase_current_end" class="form-control" value="{{ row[23] if row|length > 23 else '' }}">
         </div>
         <div class="mb-3">
-            <label class="form-label">Phase Status</label>
-            <select name="phase_status" class="form-select">
+            <label for="edit_eff_phase_status" class="form-label">Phase Status</label>
+            <select name="phase_status" id="edit_eff_phase_status" class="form-select">
                 <option value="On Track" {% if row|length > 24 and row[24] == 'On Track' %}selected{% endif %}>On Track</option>
                 <option value="Slight Delay" {% if row|length > 24 and row[24] == 'Slight Delay' %}selected{% endif %}>Slight Delay</option>
                 <option value="Delay" {% if row|length > 24 and row[24] == 'Delay' %}selected{% endif %}>Delay</option>
@@ -148,8 +148,8 @@
             </select>
         </div>
         <div class="mb-3">
-            <label class="form-label">Planned Release Date</label>
-            <input type="date" name="planned_release_date" class="form-control" value="{{ row[25] if row|length > 25 else '' }}">
+            <label for="edit_eff_planned_release_date" class="form-label">Planned Release Date</label>
+            <input type="date" name="planned_release_date" id="edit_eff_planned_release_date" class="form-control" value="{{ row[25] if row|length > 25 else '' }}">
         </div>
         <div class="d-flex gap-2 mt-3">
             <button type="submit" class="btn btn-warning btn-sm px-4 fw-semibold"><i class="bi bi-check2 me-1"></i>Save</button>

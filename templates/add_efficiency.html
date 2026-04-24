@@ -21,32 +21,32 @@
     <form method="post" id="addEfficiencyForm">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="mb-3">
-            <label class="form-label">Year</label>
-            <select name="year" class="form-select" required>
+            <label for="add_eff_year" class="form-label">Year</label>
+            <select name="year" id="add_eff_year" class="form-select" required>
                 {% for y in range(2025, 2030) %}
                 <option value="{{ y }}">{{ y }}</option>
                 {% endfor %}
             </select>
         </div>
         <div class="mb-3">
-            <label class="form-label">Project Title</label>
-            <input type="text" name="project_title" class="form-control" required>
+            <label for="add_eff_project_title" class="form-label">Project Title</label>
+            <input type="text" name="project_title" id="add_eff_project_title" class="form-control" required>
         </div>
         <div class="mb-3">
-            <label class="form-label">Generated Capacity</label>
-            <input type="text" name="generated_capacity" class="form-control" required>
+            <label for="add_eff_generated_capacity" class="form-label">Generated Capacity</label>
+            <input type="text" name="generated_capacity" id="add_eff_generated_capacity" class="form-control" required>
         </div>
         <div class="mb-3">
-            <label class="form-label">Category</label>
-            <select name="project_type" class="form-select" required>
+            <label for="add_eff_project_type" class="form-label">Category</label>
+            <select name="project_type" id="add_eff_project_type" class="form-select" required>
                 <option value="AI Agent">AI Agent</option>
                 <option value="Automation">Automation</option>
                 <option value="Other">Other</option>
             </select>
         </div>
         <div class="mb-3">
-            <label class="form-label">Status</label>
-            <select name="status" class="form-select" required>
+            <label for="add_eff_status" class="form-label">Status</label>
+            <select name="status" id="add_eff_status" class="form-select" required>
                 <option value="Initiation">Initiation</option>
                 <option value="Development">Development</option>
                 <option value="Testing">Testing</option>
@@ -57,93 +57,93 @@
             </select>
         </div>
         <div class="mb-3">
-            <label class="form-label">Content Process</label>
-            <input type="text" name="content_process" class="form-control">
+            <label for="add_eff_content_process" class="form-label">Content Process</label>
+            <input type="text" name="content_process" id="add_eff_content_process" class="form-control">
         </div>
         <div class="mb-3">
-            <label class="form-label">Project Owner</label>
-            <input type="text" name="project_owner" class="form-control">
+            <label for="add_eff_project_owner" class="form-label">Project Owner</label>
+            <input type="text" name="project_owner" id="add_eff_project_owner" class="form-control">
         </div>
         <div class="mb-3">
-            <label class="form-label">Description</label>
-            <textarea name="description" class="form-control" rows="2"></textarea>
+            <label for="add_eff_description" class="form-label">Description</label>
+            <textarea name="description" id="add_eff_description" class="form-control" rows="2"></textarea>
         </div>
         <div class="mb-3">
-            <label class="form-label">Planned Deployment</label>
+            <label for="planned_deployment" class="form-label">Planned Deployment</label>
             <input type="date" name="planned_deployment" id="planned_deployment" class="form-control" required>
         </div>
         <div class="mb-3">
-            <label class="form-label">Actual Deployment</label>
+            <label for="actual_deployment" class="form-label">Actual Deployment</label>
             <input type="date" name="actual_deployment" id="actual_deployment" class="form-control">
         </div>
         <div class="mb-3">
-            <label class="form-label">Savings</label>
+            <label for="add_eff_savings" class="form-label">Savings</label>
             <div class="input-group">
                 <span class="input-group-text">$</span>
-                <input type="text" name="savings" class="form-control" placeholder="0.00">
+                <input type="text" name="savings" id="add_eff_savings" class="form-control" placeholder="0.00">
             </div>
         </div>
         <div class="mb-3">
-            <label class="form-label">Team</label>
-            <select name="team" class="form-select" required>
+            <label for="add_eff_team" class="form-label">Team</label>
+            <select name="team" id="add_eff_team" class="form-select" required>
                 <option value="Entity">Entity</option>
                 <option value="GNS">GNS</option>
             </select>
         </div>
         <div class="mb-3">
-            <label class="form-label">Domestic/REPH</label>
-            <input type="text" name="domestic_reph" class="form-control">
+            <label for="add_eff_domestic_reph" class="form-label">Domestic/REPH</label>
+            <input type="text" name="domestic_reph" id="add_eff_domestic_reph" class="form-control">
         </div>
         <div class="mb-3">
-            <label class="form-label">GPTRAC</label>
-            <input type="text" name="gptrac" class="form-control">
+            <label for="add_eff_gptrac" class="form-label">GPTRAC</label>
+            <input type="text" name="gptrac" id="add_eff_gptrac" class="form-control">
         </div>
         <div class="mb-3">
-            <label class="form-label">Developer</label>
-            <input type="text" name="developer" class="form-control">
+            <label for="add_eff_developer" class="form-label">Developer</label>
+            <input type="text" name="developer" id="add_eff_developer" class="form-control">
         </div>
         <div class="mb-3">
-            <label class="form-label">PBD</label>
-            <select name="pbd" class="form-select">
+            <label for="add_eff_pbd" class="form-label">PBD</label>
+            <select name="pbd" id="add_eff_pbd" class="form-select">
                 <option value="">Select</option>
                 <option value="Y">Y</option>
                 <option value="N">N</option>
             </select>
         </div>
         <div class="mb-3">
-            <label class="form-label">SBD</label>
-            <select name="sbd" class="form-select">
+            <label for="add_eff_sbd" class="form-label">SBD</label>
+            <select name="sbd" id="add_eff_sbd" class="form-select">
                 <option value="">Select</option>
                 <option value="Y">Y</option>
                 <option value="N">N</option>
             </select>
         </div>
         <div class="mb-3">
-            <label class="form-label">BU Approved</label>
-            <select name="bu_approved" class="form-select">
+            <label for="add_eff_bu_approved" class="form-label">BU Approved</label>
+            <select name="bu_approved" id="add_eff_bu_approved" class="form-select">
                 <option value="">Select</option>
                 <option value="Y">Y</option>
                 <option value="N">N</option>
             </select>
         </div>
         <div class="mb-3">
-            <label class="form-label">UAT</label>
+            <div class="form-label">UAT</div>
             <div class="row g-2">
                 <div class="col-6">
-                    <input type="date" name="uat_from" class="form-control" placeholder="From">
+                    <input type="date" name="uat_from" id="add_eff_uat_from" class="form-control" placeholder="From" aria-label="UAT From">
                 </div>
                 <div class="col-6">
-                    <input type="date" name="uat_to" class="form-control" placeholder="To">
+                    <input type="date" name="uat_to" id="add_eff_uat_to" class="form-control" placeholder="To" aria-label="UAT To">
                 </div>
             </div>
         </div>
         <div class="mb-3">
-            <label class="form-label">Current End Phase</label>
-            <input type="date" name="phase_current_end" class="form-control">
+            <label for="add_eff_phase_current_end" class="form-label">Current End Phase</label>
+            <input type="date" name="phase_current_end" id="add_eff_phase_current_end" class="form-control">
         </div>
         <div class="mb-3">
-            <label class="form-label">Phase Status</label>
-            <select name="phase_status" class="form-select">
+            <label for="add_eff_phase_status" class="form-label">Phase Status</label>
+            <select name="phase_status" id="add_eff_phase_status" class="form-select">
                 <option value="On Track">On Track</option>
                 <option value="Slight Delay">Slight Delay</option>
                 <option value="Delay">Delay</option>
@@ -152,8 +152,8 @@
             </select>
         </div>
         <div class="mb-3">
-            <label class="form-label">Planned Release Date</label>
-            <input type="date" name="planned_release_date" class="form-control">
+            <label for="add_eff_planned_release_date" class="form-label">Planned Release Date</label>
+            <input type="date" name="planned_release_date" id="add_eff_planned_release_date" class="form-control">
         </div>
         <div class="d-flex gap-2 mt-3">
             <button type="submit" class="btn btn-success btn-sm px-4"><i class="bi bi-check2 me-1"></i>Add</button>

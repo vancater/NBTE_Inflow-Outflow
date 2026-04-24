@@ -79,16 +79,16 @@
             <form method="post" id="addSptForm">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="mb-3">
-                    <label class="form-label">Year Endorsed</label>
-                    <select name="year_endorsed" class="form-select form-select-sm" required>
+                    <label for="add_spt_year_endorsed" class="form-label">Year Endorsed</label>
+                    <select name="year_endorsed" id="add_spt_year_endorsed" class="form-select form-select-sm" required>
                         {% for y in range(2025, 2030) %}
                         <option value="{{ y }}">{{ y }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Month Endorsed</label>
-                    <select name="month_endorsed" class="form-select form-select-sm" required>
+                    <label for="add_spt_month_endorsed" class="form-label">Month Endorsed</label>
+                    <select name="month_endorsed" id="add_spt_month_endorsed" class="form-select form-select-sm" required>
                         <option value="01">January</option>
                         <option value="02">February</option>
                         <option value="03">March</option>
@@ -104,15 +104,15 @@
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Date Endorsed</label>
-                    <select name="day_endorsed" class="form-select form-select-sm" required>
+                    <label for="add_spt_day_endorsed" class="form-label">Date Endorsed</label>
+                    <select name="day_endorsed" id="add_spt_day_endorsed" class="form-select form-select-sm" required>
                         {% for day in range(1, 32) %}
                         <option value="{{ '%02d'|format(day) }}">{{ day }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Content Type</label>
+                    <label for="content_type_select" class="form-label">Content Type</label>
                     <select name="content_type" id="content_type_select" class="form-select form-select-sm" required>
                         {% for cat in categories %}
                         <option value="{{ cat }}">{{ cat }}</option>
@@ -120,26 +120,26 @@
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">SPT</label>
-                    <div class="readonly-box" id="content_type_value"></div>
+                    <label for="content_type_value" class="form-label">SPT</label>
+                    <input type="text" id="content_type_value" class="form-control form-control-sm readonly-box" value="" readonly>
                 </div>
                 <script type="application/json" id="content_type_map">
                     {{ category_map | tojson }}
                 </script>
                 <div class="mb-3">
-                    <label class="form-label">FTE Requirement</label>
+                    <label for="fte_requirement" class="form-label">FTE Requirement</label>
                     <input type="text" name="fte_requirement" id="fte_requirement" class="form-control form-control-sm readonly-box" value="" readonly>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Remaining FTE Capacity</label>
-                    <div class="readonly-box">{{ rem_fte }}</div>
+                    <label for="add_spt_remaining_fte_display" class="form-label">Remaining FTE Capacity</label>
+                    <input type="text" id="add_spt_remaining_fte_display" class="form-control form-control-sm readonly-box" value="{{ rem_fte }}" readonly>
                     <input type="hidden" name="remaining_fte_capacity" value="{{ rem_fte }}">
                 </div>
                 <script type="application/json" id="frequency_settings">
                     {{ frequency_settings | tojson }}
                 </script>
                 <div class="mb-3">
-                    <label class="form-label">Frequency</label>
+                    <label for="frequency" class="form-label">Frequency</label>
                     <select name="frequency" id="frequency" class="form-select form-select-sm" required>
                         <option value="Daily">Daily</option>
                         <option value="Weekly">Weekly</option>
@@ -147,15 +147,15 @@
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Average Volume</label>
+                    <label for="average_volume" class="form-label">Average Volume</label>
                     <input type="text" name="average_volume" id="average_volume" class="form-control form-control-sm" required>
                 </div>
                 <div class="mb-3" style="display:none;">
-                    <label>Working Minutes</label>
+                    <label for="working_minutes">Working Minutes</label>
                     <input type="text" name="working_minutes" id="working_minutes" class="form-control form-control-sm" value="109200" required>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Status</label>
+                    <label for="status_select" class="form-label">Status</label>
                     <select name="status" id="status_select" class="form-select form-select-sm" required>
                         <option value="Inflow">Inflow</option>
                         <option value="Outflow">Outflow</option>
@@ -212,9 +212,9 @@
             fteRequirementInput.readOnly = true;
             fteRequirementInput.classList.add('readonly-box');
             fteRequirementInput.placeholder = '';
-            const avgVol = parseFloat(avgVolInput.value) || 0;
-            const spt = parseFloat(contentTypeValue.textContent) || 0;
-            const workingMinutes = parseFloat(workingMinutesInput.value) || 1;
+            const avgVol = Number.parseFloat(avgVolInput.value) || 0;
+            const spt = Number.parseFloat(contentTypeValue.value) || 0;
+            const workingMinutes = Number.parseFloat(workingMinutesInput.value) || 1;
             const fte = workingMinutes ? (avgVol * spt) / workingMinutes : 0;
             // Match server rounding: math.ceil(fte * 100) / 100
             const fteCeiled = Math.ceil(fte * 100) / 100;
@@ -231,7 +231,7 @@
 
         function updateContentTypeValue() {
             const selectedContentType = contentTypeSelect.value;
-            contentTypeValue.textContent = categoryMap[selectedContentType] || '';
+            contentTypeValue.value = categoryMap[selectedContentType] || '';
             updateFTERequirement();
         }        frequencySelect.addEventListener('change', updateWorkingMinutes);
         avgVolInput.addEventListener('input', updateFTERequirement);

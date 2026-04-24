@@ -1051,13 +1051,13 @@
                     <div class="expand-only-block p-2 border-bottom bg-light">
                         <div class="row g-2 align-items-end">
                             <div class="col-md-3">
-                                <label class="form-label mb-1">Year</label>
+                                <label for="effFilterYear" class="form-label mb-1">Year</label>
                                 <select id="effFilterYear" class="form-select form-select-sm">
                                     <option value="">All</option>
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label mb-1">Planned Deployment</label>
+                                <div class="form-label mb-1">Planned Deployment</div>
                                 <div class="row g-1">
                                     <div class="col-6">
                                         <select id="effFilterPlannedFrom" class="form-select form-select-sm">
@@ -1072,7 +1072,7 @@
                                 </div>
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label mb-1">Team</label>
+                                <label for="effFilterTeam" class="form-label mb-1">Team</label>
                                 <select id="effFilterTeam" class="form-select form-select-sm">
                                     <option value="">All</option>
                                     <option value="Entity">Entity</option>
@@ -1080,7 +1080,7 @@
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label mb-1">Status</label>
+                                <label for="effFilterStatus" class="form-label mb-1">Status</label>
                                 <select id="effFilterStatus" class="form-select form-select-sm">
                                     <option value="">All</option>
                                 </select>
@@ -1107,13 +1107,13 @@
                             <div class="savings-filter-card">
                                 <div class="row g-2 align-items-end">
                                     <div class="col-md-2">
-                                        <label class="form-label mb-1">Year</label>
+                                        <label for="savingsSummaryYear" class="form-label mb-1">Year</label>
                                         <select id="savingsSummaryYear" class="form-select form-select-sm">
                                             <option value="">All</option>
                                         </select>
                                     </div>
                                     <div class="col-md-2">
-                                        <label class="form-label mb-1">Team</label>
+                                        <label for="savingsSummaryTeam" class="form-label mb-1">Team</label>
                                         <select id="savingsSummaryTeam" class="form-select form-select-sm">
                                             <option value="">All</option>
                                             <option value="Entity">Entity</option>
@@ -1121,13 +1121,13 @@
                                         </select>
                                     </div>
                                     <div class="col-md-2">
-                                        <label class="form-label mb-1">Status</label>
+                                        <label for="savingsSummaryStatus" class="form-label mb-1">Status</label>
                                         <select id="savingsSummaryStatus" class="form-select form-select-sm">
                                             <option value="">All</option>
                                         </select>
                                     </div>
                                     <div class="col-md-3">
-                                        <label class="form-label mb-1">Planned Deployment</label>
+                                        <div class="form-label mb-1">Planned Deployment</div>
                                         <div class="row g-1">
                                             <div class="col-6">
                                                 <input type="date" id="savingsSummaryDateFrom" class="form-control form-control-sm">
@@ -1138,14 +1138,14 @@
                                         </div>
                                     </div>
                                     <div class="col-md-2">
-                                        <label class="form-label mb-1">Include Discontinued</label>
+                                        <label for="savingsSummaryDiscontinued" class="form-label mb-1">Include Discontinued</label>
                                         <select id="savingsSummaryDiscontinued" class="form-select form-select-sm">
                                             <option value="N">No</option>
                                             <option value="Y">Yes</option>
                                         </select>
                                     </div>
                                     <div class="col-md-2">
-                                        <label class="form-label mb-1">Sort Top Projects</label>
+                                        <label for="savingsSummarySort" class="form-label mb-1">Sort Top Projects</label>
                                         <select id="savingsSummarySort" class="form-select form-select-sm">
                                             <option value="savings_desc">Highest Savings</option>
                                             <option value="capacity_desc">Highest Generated Capacity</option>
@@ -1249,7 +1249,7 @@
                             <div class="phase-filter-card">
                                 <div class="row g-2 align-items-end">
                                     <div class="col-md-3">
-                                        <label class="form-label mb-1">Team</label>
+                                        <label for="phaseFilterTeam" class="form-label mb-1">Team</label>
                                         <select id="phaseFilterTeam" class="form-select form-select-sm">
                                             <option value="">All</option>
                                             <option value="Entity">Entity</option>
@@ -1257,7 +1257,7 @@
                                         </select>
                                     </div>
                                     <div class="col-md-3">
-                                        <label class="form-label mb-1">Status</label>
+                                        <label for="phaseFilterStatus" class="form-label mb-1">Status</label>
                                         <select id="phaseFilterStatus" class="form-select form-select-sm">
                                             <option value="">All</option>
                                             <option value="On Track">On Track</option>
@@ -1268,11 +1268,11 @@
                                         </select>
                                     </div>
                                     <div class="col-md-3">
-                                        <label class="form-label mb-1">Planned Release From</label>
+                                        <label for="phaseFilterReleaseFrom" class="form-label mb-1">Planned Release From</label>
                                         <input type="date" id="phaseFilterReleaseFrom" class="form-control form-control-sm">
                                     </div>
                                     <div class="col-md-3">
-                                        <label class="form-label mb-1">Planned Release To</label>
+                                        <label for="phaseFilterReleaseTo" class="form-label mb-1">Planned Release To</label>
                                         <input type="date" id="phaseFilterReleaseTo" class="form-control form-control-sm">
                                     </div>
                                     <div class="col-md-3">
@@ -1414,16 +1414,16 @@
                                         <div class="eff-remarks-panel">
                                             <div class="eff-remarks-grid">
                                                 <div class="eff-remarks-item">
-                                                    <label class="form-label mb-1 eff-remarks-label">Milestone:</label>
-                                                    <textarea class="form-control form-control-sm eff-remarks-input" data-row-id="{{ row[0] }}" data-remarks-part="milestone" placeholder="Milestone"></textarea>
+                                                    <div class="form-label mb-1 eff-remarks-label">Milestone:</div>
+                                                    <textarea class="form-control form-control-sm eff-remarks-input" data-row-id="{{ row[0] }}" data-remarks-part="milestone" placeholder="Milestone" aria-label="Milestone"></textarea>
                                                 </div>
                                                 <div class="eff-remarks-item">
-                                                    <label class="form-label mb-1 eff-remarks-label">Challenges:</label>
-                                                    <textarea class="form-control form-control-sm eff-remarks-input" data-row-id="{{ row[0] }}" data-remarks-part="challenges" placeholder="Challenges"></textarea>
+                                                    <div class="form-label mb-1 eff-remarks-label">Challenges:</div>
+                                                    <textarea class="form-control form-control-sm eff-remarks-input" data-row-id="{{ row[0] }}" data-remarks-part="challenges" placeholder="Challenges" aria-label="Challenges"></textarea>
                                                 </div>
                                                 <div class="eff-remarks-item">
-                                                    <label class="form-label mb-1 eff-remarks-label">Next Steps:</label>
-                                                    <textarea class="form-control form-control-sm eff-remarks-input" data-row-id="{{ row[0] }}" data-remarks-part="next_steps" placeholder="Next Steps"></textarea>
+                                                    <div class="form-label mb-1 eff-remarks-label">Next Steps:</div>
+                                                    <textarea class="form-control form-control-sm eff-remarks-input" data-row-id="{{ row[0] }}" data-remarks-part="next_steps" placeholder="Next Steps" aria-label="Next Steps"></textarea>
                                                 </div>
                                             </div>
                                         </div>
@@ -1477,7 +1477,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body p-0">
-            <iframe src="/add_spt" style="width:100%;height:600px;border:none;"></iframe>
+            <iframe src="/add_spt" title="Add SPT form" style="width:100%;height:600px;border:none;"></iframe>
           </div>
         </div>
       </div>
@@ -1491,7 +1491,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body p-0">
-            <iframe src="/add_efficiency" style="width:100%;height:500px;border:none;"></iframe>
+            <iframe src="/add_efficiency" title="Add efficiency form" style="width:100%;height:500px;border:none;"></iframe>
           </div>
         </div>
       </div>
@@ -1505,7 +1505,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body p-0">
-            <iframe src="/settings" style="width:100%;height:600px;border:none;"></iframe>
+            <iframe src="/settings" title="Settings form" style="width:100%;height:600px;border:none;"></iframe>
           </div>
         </div>
       </div>
@@ -1519,7 +1519,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body p-0">
-            <iframe id="editSptFrame" src="" style="width:100%;height:600px;border:none;"></iframe>
+            <iframe id="editSptFrame" title="Edit SPT form" src="" style="width:100%;height:600px;border:none;"></iframe>
           </div>
         </div>
       </div>
@@ -1533,7 +1533,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body p-0">
-            <iframe id="editEfficiencyFrame" src="" style="width:100%;height:500px;border:none;"></iframe>
+            <iframe id="editEfficiencyFrame" title="Edit efficiency form" src="" style="width:100%;height:500px;border:none;"></iframe>
           </div>
         </div>
       </div>
@@ -1563,7 +1563,7 @@
                                 </select>
                             </div>
                             <div class="col-12">
-                                <label class="form-label fw-semibold d-block">Team</label>
+                                <div class="form-label fw-semibold d-block">Team</div>
                                 <div class="d-flex gap-4 dashboard-email-category-group" id="dashboardEmailCategoryGroup">
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" id="dashboardEmailTeamEntity" value="Entity" checked>
@@ -1594,26 +1594,26 @@
                     </div>
                     <div class="modal-body">
                         <div id="emailQuarterControls" class="border rounded p-3 mb-3 bg-light-subtle">
-                            <label class="form-label fw-semibold mb-2">1. Choose Planned Quarter Range</label>
+                            <div class="form-label fw-semibold mb-2">1. Choose Planned Quarter Range</div>
                             <div class="row g-2">
                                 <div class="col-md-6">
-                                    <label class="form-label mb-1">From Quarter</label>
+                                    <label for="emailQuarterFrom" class="form-label mb-1">From Quarter</label>
                                     <select id="emailQuarterFrom" class="form-select form-select-sm"></select>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label mb-1">To Quarter</label>
+                                    <label for="emailQuarterTo" class="form-label mb-1">To Quarter</label>
                                     <select id="emailQuarterTo" class="form-select form-select-sm"></select>
                                 </div>
                             </div>
                             <div class="row g-2 mt-3">
                                 <div class="col-md-6">
-                                    <label class="form-label mb-1">Year</label>
+                                    <label for="emailYearFilter" class="form-label mb-1">Year</label>
                                     <select id="emailYearFilter" class="form-select form-select-sm">
                                         <option value="">All</option>
                                     </select>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label mb-1">Team</label>
+                                    <label for="emailTeamFilter" class="form-label mb-1">Team</label>
                                     <select id="emailTeamFilter" class="form-select form-select-sm">
                                         <option value="">All</option>
                                         <option value="Entity">Entity</option>
@@ -1626,7 +1626,7 @@
 
                         <div id="emailProjectControls" class="border rounded p-3">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <label class="form-label fw-semibold mb-0">2. Select Projects to Email</label>
+                                <div class="form-label fw-semibold mb-0">2. Select Projects to Email</div>
                                 <div class="d-flex gap-2">
                                     <button type="button" class="btn btn-outline-secondary btn-sm" id="emailSelectAllProjects">Select All</button>
                                     <button type="button" class="btn btn-outline-secondary btn-sm" id="emailClearProjects">Clear</button>
@@ -2490,13 +2490,13 @@
 
         function parseSavings(value) {
             const normalized = (value || '').replace(/[^0-9.\-]/g, '');
-            const parsed = parseFloat(normalized);
+            const parsed = Number.parseFloat(normalized);
             return Number.isFinite(parsed) ? parsed : 0;
         }
 
         function parseGeneratedCapacity(value) {
             const normalized = (value || '').replace(/[^0-9.\-]/g, '');
-            const parsed = parseFloat(normalized);
+            const parsed = Number.parseFloat(normalized);
             return Number.isFinite(parsed) ? parsed : 0;
         }
 
@@ -2886,7 +2886,7 @@
                 `;
 
                 let htmlWindow = window.open('', '_blank', 'width=1100,height=800');
-                htmlWindow.document.write('<html><head><title>Efficiencies Email Report</title><style>');
+                htmlWindow.document.write('<html lang="en"><head><title>Efficiencies Email Report</title><style>');
                 htmlWindow.document.write('body { font-family: Segoe UI, Arial, sans-serif; padding: 20px; background: #f5f5f5; }');
                 htmlWindow.document.write('.header { margin-bottom: 20px; }');
                 htmlWindow.document.write('.copy-btn { padding: 12px 24px; background: #28a745; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; margin-right: 10px; }');
@@ -2907,7 +2907,7 @@
                 htmlWindow.document.write('function copyToClipboard() {');
                 htmlWindow.document.write('  const reportEl = document.getElementById("reportContent");');
                 htmlWindow.document.write('  const reportContent = reportEl ? reportEl.outerHTML : "";');
-                htmlWindow.document.write('  const styledHtml = "<html><head><meta charset=\'UTF-8\'></head><body>" + reportContent + "</body></html>";');
+                htmlWindow.document.write('  const styledHtml = "<html lang=\'en\'><head><meta charset=\'UTF-8\'></head><body>" + reportContent + "</body></html>";');
                 htmlWindow.document.write('  const plainText = (reportEl ? reportEl.innerText : "").trim();');
                 htmlWindow.document.write('  const feedback = document.getElementById("feedback");');
                 htmlWindow.document.write('  const showFeedback = (msg, ok) => {');
@@ -3173,7 +3173,7 @@
             body += `</div>`;
 
             // Build report content in popup window.
-            htmlWindow.document.write('<html><head><title>Email Report</title><style>');
+            htmlWindow.document.write('<html lang="en"><head><title>Email Report</title><style>');
             htmlWindow.document.write('body { font-family: Segoe UI, Arial, sans-serif; padding: 20px; background: #f5f5f5; }');
             htmlWindow.document.write('.header { margin-bottom: 20px; }');
             htmlWindow.document.write('.copy-btn { padding: 12px 24px; background: #28a745; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; margin-right: 10px; }');
@@ -3258,8 +3258,8 @@
             }
 
             function toNumber(value) {
-                const parsed = parseFloat(String(value || '').replace(/[$,]/g, '').trim());
-                return isNaN(parsed) ? 0 : parsed;
+                const parsed = Number.parseFloat(String(value || '').replaceAll('$', '').replaceAll(',', '').trim());
+                return Number.isNaN(parsed) ? 0 : parsed;
             }
 
             function roundUp2(value) {
@@ -3468,7 +3468,7 @@
                 body += `<p>Thank you</p>`;
                 body += `</div>`;
 
-                htmlWindow.document.write('<html><head><title>Email Report</title><style>');
+                htmlWindow.document.write('<html lang="en"><head><title>Email Report</title><style>');
                 htmlWindow.document.write('body { font-family: Segoe UI, Arial, sans-serif; padding: 20px; background: #f5f5f5; }');
                 htmlWindow.document.write('.header { margin-bottom: 20px; }');
                 htmlWindow.document.write('.copy-btn { padding: 12px 24px; background: #28a745; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; margin-right: 10px; }');
@@ -3537,7 +3537,7 @@
         window.addEventListener('load', initDashboardEmailPicker);
     })();
 </script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
 </body>
 </html>
 

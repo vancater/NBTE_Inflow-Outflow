@@ -31,6 +31,176 @@ def format_generated_capacity_value(raw_value):
         return ''
     return f"{numeric_value:.2f}".rstrip('0').rstrip('.')
 
+
+def get_effective_user_name():
+    current_user = get_current_user() or session.get('user') or {}
+    if isinstance(current_user, dict):
+        changed_by = (
+            current_user.get('name') or
+            current_user.get('display_name') or
+            current_user.get('preferred_username') or
+            current_user.get('email') or
+            'Unknown User'
+        )
+    else:
+        changed_by = 'Unknown User'
+    return str(changed_by).strip() or 'Unknown User'
+
+
+def build_spt_submission_payload(form, remaining_fte_capacity):
+    spt_value = float(dict(db.get_spt_settings()).get(form['content_type'], 0))
+    average_volume = float(form['average_volume']) if form['average_volume'] else 0
+    working_minutes = float(form['working_minutes']) if form['working_minutes'] else 1
+    fte_requirement = math.ceil(((average_volume * spt_value) / working_minutes) * 100) / 100 if working_minutes else 0
+    status = form['status']
+    if status == 'Outflow':
+        fte_requirement = -fte_requirement
+    return {
+        'year_endorsed': build_endorsed_date(
+            form['year_endorsed'],
+            form.get('month_endorsed', ''),
+            form.get('day_endorsed', '')
+        ),
+        'content_type': form['content_type'],
+        'fte_requirement': fte_requirement,
+        'remaining_fte_capacity': remaining_fte_capacity,
+        'frequency': form['frequency'],
+        'spt': spt_value,
+        'average_volume': form['average_volume'],
+        'working_minutes': working_minutes,
+        'status': status
+    }
+
+
+def log_spt_row_changes(row_id, old_row, data, changed_by):
+    if not old_row:
+        return
+
+    new_values = {
+        'year_endorsed': data['year_endorsed'],
+        'content_type': data['content_type'],
+        'fte_requirement': str(data['fte_requirement']),
+        'remaining_fte_capacity': str(data['remaining_fte_capacity']),
+        'frequency': data['frequency'],
+        'spt': str(data['spt']),
+        'average_volume': str(data['average_volume']),
+        'working_minutes': str(data['working_minutes']),
+        'status': data['status']
+    }
+    old_values = {
+        'year_endorsed': old_row[1] or '',
+        'content_type': old_row[2] or '',
+        'fte_requirement': old_row[3] or '',
+        'remaining_fte_capacity': old_row[4] or '',
+        'frequency': old_row[5] or '',
+        'spt': old_row[6] or '',
+        'average_volume': old_row[7] or '',
+        'working_minutes': old_row[8] or '',
+        'status': old_row[9] or ''
+    }
+    for field, old_value in old_values.items():
+        new_value = new_values[field]
+        if str(old_value) != str(new_value):
+            db.log_spt_change(row_id, changed_by, field, str(old_value), str(new_value))
+
+
+def get_settings_view_context(saved=False, **overrides):
+    context = {
+        'headcount': db.get_headcount(),
+        'spt_settings': db.get_spt_settings(),
+        'frequency_settings': db.get_frequency_settings(),
+        'spt_history': db.get_spt_settings_history(limit=100),
+        'saved': saved
+    }
+    context.update(overrides)
+    return context
+
+
+def get_settings_frequency_values(form):
+    return {
+        'Daily': form.get('frequency_Daily', ''),
+        'Weekly': form.get('frequency_Weekly', ''),
+        'Monthly': form.get('frequency_Monthly', '')
+    }
+
+
+def get_settings_row_snapshot(form, index, categories, values, original_categories, original_values):
+    cat = categories[index]
+    val = values[index] if index < len(values) else ''
+    old_cat = original_categories[index].strip() if index < len(original_categories) and original_categories[index] else ''
+    old_val = original_values[index].strip() if index < len(original_values) and original_values[index] else ''
+    new_cat = cat.strip()
+    new_val = val.strip() if val else ''
+    row_comment = form.get(f'change_comment_{index}', '')
+    return {
+        'category': new_cat,
+        'value': new_val,
+        'old_category': old_cat,
+        'old_value': old_val,
+        'comment': row_comment,
+        'changed': old_cat != new_cat or old_val != new_val,
+    }
+
+
+def append_settings_row_result(index, row_data, settings, changelog_entries, validation_errors, row_comments):
+    row_comments[index] = row_data['comment']
+    if row_data['category']:
+        settings.append((row_data['category'], row_data['value']))
+    if not row_data['changed']:
+        return
+
+    row_comment = row_data['comment'].strip()
+    if not row_comment:
+        validation_errors.append(f'Row {index + 1}: Comment is required when changing SPT.')
+        return
+
+    changelog_entries.append({
+        'category': row_data['category'],
+        'old_value': row_data['old_value'],
+        'new_value': row_data['value'],
+        'comment': row_comment
+    })
+
+
+def parse_settings_submission(form):
+    settings = []
+    categories = form.getlist('category')
+    values = form.getlist('value')
+    original_categories = form.getlist('original_category')
+    original_values = form.getlist('original_value')
+    changelog_entries = []
+    validation_errors = []
+    row_comments = {}
+
+    for i in range(len(categories)):
+        row_data = get_settings_row_snapshot(form, i, categories, values, original_categories, original_values)
+        append_settings_row_result(i, row_data, settings, changelog_entries, validation_errors, row_comments)
+
+    return {
+        'headcount': form.get('headcount'),
+        'settings': settings,
+        'frequency_settings': get_settings_frequency_values(form),
+        'changelog_entries': changelog_entries,
+        'validation_errors': validation_errors,
+        'row_comments': row_comments
+    }
+
+
+def apply_settings_submission(submission, changed_by):
+    headcount = submission['headcount']
+    if headcount:
+        db.set_headcount(headcount)
+    db.update_spt_settings(submission['settings'])
+
+    for entry in submission['changelog_entries']:
+        entry['changed_by'] = changed_by
+    db.log_spt_settings_history_entries(submission['changelog_entries'])
+
+    for freq_name, freq_value in submission['frequency_settings'].items():
+        if freq_value:
+            db.set_frequency_setting(freq_name, freq_value.replace(',', ''))
+    update_all_spt_fte_in_db()
+
 def recalculate_fte_for_rows(spt_rows):
     """Recalculate FTE requirements for each row based on current SPT values"""
     updated_rows = []
@@ -396,45 +566,9 @@ def dashboard():
     return render_template('dashboard.html', spt_rows=spt_rows, eff_rows=eff_rows, eff_rows_all=eff_rows_all, filtered_eff_ids=filtered_eff_ids, efficiency_summary_by_year=efficiency_summary_by_year, headcount=headcount, metrics=metrics, content_summary=content_summary, message=message, planned_deployment_display=format_planned_deployment_display,
         filter_status=status, filter_year=year, filter_month=month, filter_exact_date=exact_date, filter_from_date=from_date, filter_to_date=to_date, years=years, months=months, eff_expanded=eff_expanded)
 
-@main_bp.route('/add_spt', methods=['GET', 'POST'])
+@main_bp.route('/add_spt', methods=['GET'])
 @login_required
-@csrf_protect
 def add_spt():
-    if request.method == 'POST':
-        full_endorsed_date = build_endorsed_date(
-            request.form['year_endorsed'],
-            request.form.get('month_endorsed', ''),
-            request.form.get('day_endorsed', '')
-        )
-
-        spt_value = float(dict(db.get_spt_settings()).get(request.form['content_type'], 0))
-        average_volume = float(request.form['average_volume']) if request.form['average_volume'] else 0
-        working_minutes = float(request.form['working_minutes']) if request.form['working_minutes'] else 1
-        
-        # FTE Requirement = (Average Volume * SPT) / Working Minutes
-        fte_requirement = math.ceil(((average_volume * spt_value) / working_minutes) * 100) / 100 if working_minutes else 0
-        
-        status = request.form['status']
-        
-        # For Outflow, negate the FTE requirement so it adds to the overstaffed/understaffed metric
-        if status == 'Outflow':
-            fte_requirement = -fte_requirement
-        
-        # Store as SPT entry
-        data = {
-            'year_endorsed': full_endorsed_date,
-            'content_type': request.form['content_type'],
-            'fte_requirement': fte_requirement,
-            'remaining_fte_capacity': db.get_metrics()['diff'],
-            'frequency': request.form['frequency'],
-            'spt': spt_value,
-            'average_volume': request.form['average_volume'],
-            'working_minutes': request.form['working_minutes'],
-            'status': status
-        }
-        db.add_spt(data)
-        
-        return render_template('close_modal.html')
     categories = [row[0] for row in db.get_spt_settings()]
     category_map = {row[0]: row[1] for row in db.get_spt_settings()}
     metrics = db.get_metrics()
@@ -442,84 +576,47 @@ def add_spt():
     frequency_settings = db.get_frequency_settings()
     return render_template('add_spt.html', categories=categories, category_map=category_map, rem_fte=rem_fte, frequency_settings=frequency_settings)
 
-@main_bp.route('/edit_spt/<int:row_id>', methods=['GET', 'POST'])
+@main_bp.route('/add_spt', methods=['POST'])
+@login_required
+@csrf_protect
+def add_spt_submit():
+    full_endorsed_date = build_endorsed_date(
+        request.form['year_endorsed'],
+        request.form.get('month_endorsed', ''),
+        request.form.get('day_endorsed', '')
+    )
+
+    spt_value = float(dict(db.get_spt_settings()).get(request.form['content_type'], 0))
+    average_volume = float(request.form['average_volume']) if request.form['average_volume'] else 0
+    working_minutes = float(request.form['working_minutes']) if request.form['working_minutes'] else 1
+
+    # FTE Requirement = (Average Volume * SPT) / Working Minutes
+    fte_requirement = math.ceil(((average_volume * spt_value) / working_minutes) * 100) / 100 if working_minutes else 0
+
+    status = request.form['status']
+
+    # For Outflow, negate the FTE requirement so it adds to the overstaffed/understaffed metric
+    if status == 'Outflow':
+        fte_requirement = -fte_requirement
+
+    data = {
+        'year_endorsed': full_endorsed_date,
+        'content_type': request.form['content_type'],
+        'fte_requirement': fte_requirement,
+        'remaining_fte_capacity': db.get_metrics()['diff'],
+        'frequency': request.form['frequency'],
+        'spt': spt_value,
+        'average_volume': request.form['average_volume'],
+        'working_minutes': request.form['working_minutes'],
+        'status': status
+    }
+    db.add_spt(data)
+    return render_template('close_modal.html')
+
+@main_bp.route('/edit_spt/<int:row_id>', methods=['GET'])
 @login_required
 @requires_role('Manager')
-@csrf_protect
 def edit_spt(row_id):
-    if request.method == 'POST':
-        old_row = db.conn.execute("SELECT * FROM spt WHERE id=?", (row_id,)).fetchone()
-        spt_value = float(dict(db.get_spt_settings()).get(request.form['content_type'], 0))
-        metrics = db.get_metrics()
-        rem_fte = metrics['diff']
-        average_volume = float(request.form['average_volume']) if request.form['average_volume'] else 0
-        working_minutes = float(request.form['working_minutes']) if request.form['working_minutes'] else 1
-        
-        # FTE Requirement = (Average Volume * SPT) / Working Minutes
-        fte_requirement = math.ceil(((average_volume * spt_value) / working_minutes) * 100) / 100 if working_minutes else 0
-        
-        status = request.form['status']
-        
-        # For Outflow, negate the FTE requirement so it adds to the overstaffed/understaffed metric
-        if status == 'Outflow':
-            fte_requirement = -fte_requirement
-        full_endorsed_date = build_endorsed_date(
-            request.form['year_endorsed'],
-            request.form.get('month_endorsed', ''),
-            request.form.get('day_endorsed', '')
-        )
-        data = {
-            'year_endorsed': full_endorsed_date,
-            'content_type': request.form['content_type'],
-            'fte_requirement': fte_requirement,
-            'remaining_fte_capacity': rem_fte,
-            'frequency': request.form['frequency'],
-            'spt': spt_value,
-            'average_volume': request.form['average_volume'],
-            'working_minutes': working_minutes,
-            'status': request.form['status']
-        }
-        current_user = get_current_user() or session.get('user') or {}
-        if isinstance(current_user, dict):
-            changed_by = (
-                current_user.get('name') or
-                current_user.get('display_name') or
-                current_user.get('preferred_username') or
-                current_user.get('email') or
-                'Unknown User'
-            )
-        else:
-            changed_by = 'Unknown User'
-        changed_by = str(changed_by).strip() or 'Unknown User'
-        if old_row:
-            new_values = {
-                'year_endorsed': data['year_endorsed'],
-                'content_type': data['content_type'],
-                'fte_requirement': str(data['fte_requirement']),
-                'remaining_fte_capacity': str(data['remaining_fte_capacity']),
-                'frequency': data['frequency'],
-                'spt': str(data['spt']),
-                'average_volume': str(data['average_volume']),
-                'working_minutes': str(data['working_minutes']),
-                'status': data['status']
-            }
-            old_values = {
-                'year_endorsed': old_row[1] or '',
-                'content_type': old_row[2] or '',
-                'fte_requirement': old_row[3] or '',
-                'remaining_fte_capacity': old_row[4] or '',
-                'frequency': old_row[5] or '',
-                'spt': old_row[6] or '',
-                'average_volume': old_row[7] or '',
-                'working_minutes': old_row[8] or '',
-                'status': old_row[9] or ''
-            }
-            for field, old_value in old_values.items():
-                new_value = new_values[field]
-                if str(old_value) != str(new_value):
-                    db.log_spt_change(row_id, changed_by, field, str(old_value), str(new_value))
-        db.update_spt(row_id, data)
-        return render_template('close_modal.html')
     row = db.conn.execute("SELECT * FROM spt WHERE id=?", (row_id,)).fetchone()
     categories = [row[0] for row in db.get_spt_settings()]
     category_map = {row[0]: row[1] for row in db.get_spt_settings()}
@@ -527,6 +624,18 @@ def edit_spt(row_id):
     rem_fte = metrics['diff']
     frequency_settings = db.get_frequency_settings()
     return render_template('edit_spt.html', row=row, categories=categories, category_map=category_map, rem_fte=rem_fte, frequency_settings=frequency_settings)
+
+@main_bp.route('/edit_spt/<int:row_id>', methods=['POST'])
+@login_required
+@requires_role('Manager')
+@csrf_protect
+def edit_spt_submit(row_id):
+    old_row = db.conn.execute("SELECT * FROM spt WHERE id=?", (row_id,)).fetchone()
+    data = build_spt_submission_payload(request.form, db.get_metrics()['diff'])
+    changed_by = get_effective_user_name()
+    log_spt_row_changes(row_id, old_row, data, changed_by)
+    db.update_spt(row_id, data)
+    return render_template('close_modal.html')
 
 @main_bp.route('/delete_spt/<int:row_id>', methods=['POST'])
 @login_required
@@ -536,42 +645,50 @@ def delete_spt(row_id):
     db.delete_spt(row_id)
     return redirect(url_for('main.dashboard'))
 
-@main_bp.route('/add_efficiency', methods=['GET', 'POST'])
+@main_bp.route('/add_efficiency', methods=['GET'])
 @login_required
-@csrf_protect
 def add_efficiency():
-    if request.method == 'POST':
-        data = build_efficiency_payload(request.form, current_status='Initiation')
-        db.add_efficiency(data)
-        return render_template('close_modal.html')
     return render_template('add_efficiency.html')
 
-@main_bp.route('/edit_efficiency/<int:row_id>', methods=['GET', 'POST'])
+@main_bp.route('/add_efficiency', methods=['POST'])
+@login_required
+@csrf_protect
+def add_efficiency_submit():
+    data = build_efficiency_payload(request.form, current_status='Initiation')
+    db.add_efficiency(data)
+    return render_template('close_modal.html')
+
+@main_bp.route('/edit_efficiency/<int:row_id>', methods=['GET'])
 @login_required
 @requires_role('Manager')
-@csrf_protect
 def edit_efficiency(row_id):
     standalone = request.args.get('standalone') == '1'
     standalone_view = request.args.get('eff_view', 'details')
-
-    if request.method == 'POST':
-        current_row = db.conn.execute("SELECT * FROM efficiencies WHERE id=?", (row_id,)).fetchone()
-        current_status = current_row[4] if current_row and len(current_row) > 4 else 'N/A'
-        current_project_lead = current_row[11] if current_row and len(current_row) > 11 else ''
-        current_remarks = current_row[14] if current_row and len(current_row) > 14 else ''
-
-        data = build_efficiency_payload(
-            request.form,
-            current_status=current_status,
-            current_project_lead=current_project_lead,
-            current_remarks=current_remarks,
-        )
-        db.update_efficiency(row_id, data)
-        if standalone:
-            return redirect(url_for('main.dashboard', message='Efficiency updated successfully.', eff_expanded='1', eff_view=standalone_view))
-        return render_template('close_modal.html')
     row = db.conn.execute("SELECT * FROM efficiencies WHERE id=?", (row_id,)).fetchone()
     return render_template('edit_efficiency.html', row=row, standalone=standalone, standalone_view=standalone_view)
+
+@main_bp.route('/edit_efficiency/<int:row_id>', methods=['POST'])
+@login_required
+@requires_role('Manager')
+@csrf_protect
+def edit_efficiency_submit(row_id):
+    standalone = request.args.get('standalone') == '1'
+    standalone_view = request.args.get('eff_view', 'details')
+    current_row = db.conn.execute("SELECT * FROM efficiencies WHERE id=?", (row_id,)).fetchone()
+    current_status = current_row[4] if current_row and len(current_row) > 4 else 'N/A'
+    current_project_lead = current_row[11] if current_row and len(current_row) > 11 else ''
+    current_remarks = current_row[14] if current_row and len(current_row) > 14 else ''
+
+    data = build_efficiency_payload(
+        request.form,
+        current_status=current_status,
+        current_project_lead=current_project_lead,
+        current_remarks=current_remarks,
+    )
+    db.update_efficiency(row_id, data)
+    if standalone:
+        return redirect(url_for('main.dashboard', message='Efficiency updated successfully.', eff_expanded='1', eff_view=standalone_view))
+    return render_template('close_modal.html')
 
 @main_bp.route('/delete_efficiency/<int:row_id>', methods=['POST'])
 @login_required
@@ -590,112 +707,34 @@ def update_efficiency_remarks(row_id):
     db.update_efficiency_remarks(row_id, remarks)
     return ('', 204)
 
-@main_bp.route('/settings', methods=['GET', 'POST'])
+@main_bp.route('/settings', methods=['GET'])
+@login_required
+@requires_role('Manager')
+def settings():
+    saved = request.args.get('saved') == '1'
+    return render_template('settings.html', **get_settings_view_context(saved=saved))
+
+@main_bp.route('/settings', methods=['POST'])
 @login_required
 @requires_role('Manager')
 @csrf_protect
-def settings():
-    if request.method == 'POST':
-        # This is the main save action (Add/Delete category buttons have formaction so they bypass this)
-        headcount = request.form.get('headcount')
-        old_spt_settings = db.get_spt_settings()
-        settings = []
-        categories = request.form.getlist('category')
-        values = request.form.getlist('value')
-        original_categories = request.form.getlist('original_category')
-        original_values = request.form.getlist('original_value')
-        changelog_entries = []
-        validation_errors = []
-
-        for i in range(len(categories)):
-            cat = categories[i]
-            val = values[i] if i < len(values) else ''
-            if cat and cat.strip():
-                settings.append((cat.strip(), val.strip() if val else ''))
-
-            old_cat = original_categories[i].strip() if i < len(original_categories) and original_categories[i] else ''
-            old_val = original_values[i].strip() if i < len(original_values) and original_values[i] else ''
-            new_cat = cat.strip()
-            new_val = val.strip() if val else ''
-            row_changed = (old_cat != new_cat) or (old_val != new_val)
-
-            if row_changed:
-                row_comment = request.form.get(f'change_comment_{i}', '').strip()
-                if not row_comment:
-                    validation_errors.append(f'Row {i + 1}: Comment is required when changing SPT.')
-                    continue
-                changelog_entries.append({
-                    'category': new_cat,
-                    'old_value': old_val,
-                    'new_value': new_val,
-                    'comment': row_comment
-                })
-
-        if validation_errors:
-            frequency_settings = {
-                'Daily': request.form.get('frequency_Daily', ''),
-                'Weekly': request.form.get('frequency_Weekly', ''),
-                'Monthly': request.form.get('frequency_Monthly', '')
-            }
-            row_comments = {}
-            for i in range(len(categories)):
-                row_comments[i] = request.form.get(f'change_comment_{i}', '')
-            return render_template(
-                'settings.html',
-                headcount=headcount,
-                spt_settings=settings,
-                frequency_settings=frequency_settings,
-                spt_history=db.get_spt_settings_history(limit=100),
-                error_message=' '.join(validation_errors),
-                row_comments=row_comments,
-                saved=False
+def settings_submit():
+    submission = parse_settings_submission(request.form)
+    if submission['validation_errors']:
+        return render_template(
+            'settings.html',
+            **get_settings_view_context(
+                saved=False,
+                headcount=submission['headcount'],
+                spt_settings=submission['settings'],
+                frequency_settings=submission['frequency_settings'],
+                error_message=' '.join(submission['validation_errors']),
+                row_comments=submission['row_comments'],
             )
+        )
 
-        if headcount:
-            db.set_headcount(headcount)
-        db.update_spt_settings(settings)
-
-        current_user = get_current_user() or session.get('user') or {}
-        if isinstance(current_user, dict):
-            changed_by = (
-                current_user.get('name') or
-                current_user.get('display_name') or
-                current_user.get('preferred_username') or
-                current_user.get('email') or
-                'Unknown User'
-            )
-        else:
-            changed_by = 'Unknown User'
-        changed_by = str(changed_by).strip() or 'Unknown User'
-
-        for entry in changelog_entries:
-            entry['changed_by'] = changed_by
-
-        db.log_spt_settings_history_entries(changelog_entries)
-
-        # Save frequency settings
-        for freq_name in ['Daily', 'Weekly', 'Monthly']:
-            freq_value = request.form.get(f'frequency_{freq_name}')
-            if freq_value:
-                # Strip commas from the frequency value before saving
-                freq_value = freq_value.replace(',', '')
-                db.set_frequency_setting(freq_name, freq_value)
-        # Recalculate all FTE values in the database when frequency settings change
-        update_all_spt_fte_in_db()
-        return redirect(url_for('main.settings', saved='1'))
-    headcount = db.get_headcount()
-    spt_settings = db.get_spt_settings()
-    frequency_settings = db.get_frequency_settings()
-    spt_history = db.get_spt_settings_history(limit=100)
-    saved = request.args.get('saved') == '1'
-    return render_template(
-        'settings.html',
-        headcount=headcount,
-        spt_settings=spt_settings,
-        frequency_settings=frequency_settings,
-        spt_history=spt_history,
-        saved=saved
-    )
+    apply_settings_submission(submission, get_effective_user_name())
+    return redirect(url_for('main.settings', saved='1'))
 
 @main_bp.route('/add_spt_category', methods=['POST'])
 @login_required

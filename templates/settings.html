@@ -249,7 +249,7 @@ function ensureNoHistoryPlaceholder() {
         if (!noHistoryRow) {
             const tr = document.createElement('tr');
             tr.id = 'noHistoryRow';
-            tr.innerHTML = '<td colspan="6" class="text-center text-muted">No SPT change history yet.</td>';
+            tr.innerHTML = '<td colspan="7" class="text-center text-muted">No SPT change history yet.</td>';
             tbody.appendChild(tr);
         }
     } else if (noHistoryRow) {
@@ -299,6 +299,7 @@ function upsertPendingHistoryRow(row) {
         '<td>' + category + '</td>' +
         '<td>' + oldValue + '</td>' +
         '<td>' + newValue + '</td>' +
+        '<td>Pending</td>' +
         '<td>' + comment + '</td>' +
         '<td class="text-end text-muted">Pending</td>';
 

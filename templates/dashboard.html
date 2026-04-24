@@ -949,7 +949,7 @@
                 <div class="card-header bg-primary text-white"><i class="bi bi-table me-1"></i>SPT Table</div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-bordered table-hover table-sm mb-0">
+                        <table id="sptMainTable" class="table table-bordered table-hover table-sm mb-0">
                             <thead>
                                 <tr>
                                     <th>Endorsed Date</th>
@@ -1310,7 +1310,7 @@
                         </div>
                     </div>
                     <div class="table-responsive efficiencies-scroll">
-                        <table class="table table-bordered table-hover table-sm mb-0">
+                        <table id="efficienciesMainTable" class="table table-bordered table-hover table-sm mb-0">
                             <thead>
                                 <tr>
                                     <th class="expand-only-col eff-sticky-year">Year</th>
@@ -3114,7 +3114,7 @@
             body += '</table>';// SPT Table
             body += `<div style="${sectionTitleStyle}">SPT Table</div>`;
             body += `<table style="${tableStyle}">`;
-            let sptTable = document.querySelectorAll('table.table-bordered')[0];
+            let sptTable = document.getElementById('sptMainTable');
             let sptRows = sptTable.querySelectorAll('tbody tr');
             let sptHeaders = Array.from(sptTable.querySelectorAll('thead th'));
             // Exclude 'Remaining FTE Capacity' and 'Action' columns
@@ -3140,7 +3140,7 @@
             body += '</table>';            // Efficiencies Table
             body += `<div style="${sectionTitleStyle}">Efficiencies</div>`;
             body += `<table style="${tableStyle}">`;
-            let effTable = document.querySelectorAll('table.table-bordered')[1];
+            let effTable = document.getElementById('efficienciesMainTable');
             if (!effTable) {
                 htmlWindow.close();
                 alert('Unable to generate email report. Efficiencies table was not found.');
@@ -3345,8 +3345,8 @@
                     return;
                 }
 
-                const sptTable = document.querySelectorAll('table.table-bordered')[0];
-                const effTable = document.querySelectorAll('table.table-bordered')[1];
+                const sptTable = document.getElementById('sptMainTable');
+                const effTable = document.getElementById('efficienciesMainTable');
                 if (!sptTable || !effTable) {
                     htmlWindow.close();
                     alert('Unable to generate email report because one or more dashboard tables were not found.');
@@ -3363,7 +3363,7 @@
                     if (!includeEfficiencies) return false;
                     const rowTeam = (row.getAttribute('data-eff-team') || '').trim();
                     const teamMatch = selectedTeams.length === 0 || selectedTeams.includes(rowTeam);
-                    return rowMatchesRange(normalizeRecordDate(row.getAttribute('data-eff-year')), fromDate, toDate) && teamMatch;
+                    return rowMatchesRange(normalizeRecordDate(row.getAttribute('data-eff-planned') || row.getAttribute('data-eff-year')), fromDate, toDate) && teamMatch;
                 });
 
                 if (!sptRows.length && (!includeEfficiencies || !effRows.length)) {

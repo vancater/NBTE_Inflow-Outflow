@@ -24,6 +24,13 @@ def format_savings_value(raw_value):
         return value
     return f"${value}"
 
+
+def format_generated_capacity_value(raw_value):
+    numeric_value = parse_numeric_text(raw_value)
+    if numeric_value == 0 and not str(raw_value or '').strip():
+        return ''
+    return f"{numeric_value:.2f}".rstrip('0').rstrip('.')
+
 def recalculate_fte_for_rows(spt_rows):
     """Recalculate FTE requirements for each row based on current SPT values"""
     updated_rows = []
@@ -76,7 +83,7 @@ def recalculate_metrics(spt_rows, eff_rows, headcount, year=None):
     for row in eff_rows:
         if not is_active_efficiency_row(row):
             continue
-        generated_capacity = float(row[2]) if row[2] else 0  # row[2] is generated_capacity
+        generated_capacity = parse_numeric_text(row[2] if len(row) > 2 else '')
         eff_total += generated_capacity
         if normalize_efficiency_team(row[10] if len(row) > 10 else '') == 'GNS':
             gns_eff_total += generated_capacity
@@ -124,6 +131,131 @@ def normalize_efficiency_team(team_value):
 def is_active_efficiency_row(row):
     status_value = row[4] if len(row) > 4 and row[4] else ''
     return str(status_value).strip() != 'Discontinued'
+
+
+def build_efficiency_payload(form, *, current_status='Initiation', current_project_lead='', current_remarks=''):
+    return {
+        'project_title': form['project_title'],
+        'generated_capacity': format_generated_capacity_value(form.get('generated_capacity', '')),
+        'project_type': form['project_type'],
+        'status': form.get('status', current_status),
+        'year': form['year'],
+        'project_owner': form.get('project_owner', ''),
+        'description': form.get('description', ''),
+        'planned_deployment': form.get('planned_deployment', ''),
+        'actual_deployment': form.get('actual_deployment', ''),
+        'savings': format_savings_value(form.get('savings', '')),
+        'team': form.get('team', ''),
+        'project_lead': current_project_lead,
+        'domestic_reph': form.get('domestic_reph', ''),
+        'gptrac': form.get('gptrac', ''),
+        'remarks': form.get('remarks', current_remarks),
+        'content_process': form.get('content_process', ''),
+        'developer': form.get('developer', ''),
+        'pbd': form.get('pbd', ''),
+        'sbd': form.get('sbd', ''),
+        'bu_approved': form.get('bu_approved', ''),
+        'uat_from': form.get('uat_from', ''),
+        'uat_to': form.get('uat_to', ''),
+        'phase_current_end': form.get('phase_current_end', ''),
+        'phase_status': form.get('phase_status', 'On Track'),
+        'planned_release_date': form.get('planned_release_date', '')
+    }
+
+
+def parse_numeric_text(raw_value):
+    try:
+        return float(str(raw_value).replace(',', '').replace('$', '').strip()) if raw_value else 0.0
+    except ValueError:
+        return 0.0
+
+
+def normalize_efficiency_filter_date(raw_value, fallback_year=''):
+    value = (raw_value or '').strip()
+    if not value:
+        fallback = str(fallback_year or '').strip()
+        return f'{fallback}-01-01' if fallback.isdigit() and len(fallback) == 4 else ''
+    if len(value) == 10 and value[4] == '-' and value[7] == '-':
+        return value
+    if len(value) == 7 and value[4] == '-':
+        if value[5].upper() == 'Q' and value[6] in '1234':
+            quarter_month_map = {'1': '01', '2': '04', '3': '07', '4': '10'}
+            return f"{value[:4]}-{quarter_month_map[value[6]]}-01"
+        return f'{value}-01'
+    if len(value) == 4 and value.isdigit():
+        return f'{value}-01-01'
+    return ''
+
+
+def filter_efficiency_rows_for_dashboard(eff_rows, filters):
+    if not filters:
+        return eff_rows
+
+    selected_year = str(filters.get('year') or '').strip()
+    exact_date = str(filters.get('exact_date') or '').strip()
+    from_date = str(filters.get('from_date') or '').strip()
+    to_date = str(filters.get('to_date') or '').strip()
+
+    filtered_rows = []
+    for row in eff_rows:
+        row_year = str(row[5] if len(row) > 5 and row[5] else '').strip()
+        planned_date = normalize_efficiency_filter_date(row[8] if len(row) > 8 else '', row_year)
+
+        if selected_year and row_year != selected_year:
+            continue
+        if exact_date and planned_date != exact_date:
+            continue
+        if from_date and to_date and (not planned_date or planned_date < from_date or planned_date > to_date):
+            continue
+        filtered_rows.append(row)
+    return filtered_rows
+
+
+def build_efficiency_summary_by_year(eff_rows):
+    summary_by_year = {}
+    for row in eff_rows:
+        if not is_active_efficiency_row(row):
+            continue
+
+        year_value = row[5] if len(row) > 5 and row[5] else None
+        if not year_value:
+            continue
+
+        team_value = normalize_efficiency_team(row[10] if len(row) > 10 else '')
+        generated_capacity = parse_numeric_text(row[2] if len(row) > 2 else '')
+        savings = parse_numeric_text(row[9] if len(row) > 9 else '')
+        year_summary = summary_by_year.setdefault(year_value, {
+            'generated_capacity': 0.0,
+            'savings': 0.0,
+            'gns_generated_capacity': 0.0,
+            'nbte_generated_capacity': 0.0,
+            'gns_savings': 0.0,
+            'nbte_savings': 0.0
+        })
+        year_summary['generated_capacity'] += generated_capacity
+        year_summary['savings'] += savings
+        if team_value == 'GNS':
+            year_summary['gns_generated_capacity'] += generated_capacity
+            year_summary['gns_savings'] += savings
+        else:
+            year_summary['nbte_generated_capacity'] += generated_capacity
+            year_summary['nbte_savings'] += savings
+
+    return sorted(
+        [
+            (
+                year,
+                summary['generated_capacity'],
+                summary['savings'],
+                summary['gns_savings'],
+                summary['nbte_savings'],
+                summary['gns_generated_capacity'],
+                summary['nbte_generated_capacity']
+            )
+            for year, summary in summary_by_year.items()
+        ],
+        key=lambda item: item[0]
+    )
 
 def format_planned_deployment_display(raw_value):
     value = (raw_value or '').strip()
@@ -246,58 +378,10 @@ def dashboard():
     spt_rows = db.get_spt(filters)
     # Recalculate FTE requirements with current SPT values
     spt_rows = recalculate_fte_for_rows(spt_rows)
-    eff_rows = db.get_efficiencies(filters=filters)
     eff_rows_all = db.get_efficiencies()
+    eff_rows = filter_efficiency_rows_for_dashboard(eff_rows_all, filters)
     filtered_eff_ids = [row[0] for row in eff_rows]
-    efficiency_summary_by_year = {}
-    for row in eff_rows_all:
-        if not is_active_efficiency_row(row):
-            continue
-        year_value = row[5] if len(row) > 5 and row[5] else None
-        if not year_value:
-            continue
-        team_value = normalize_efficiency_team(row[10] if len(row) > 10 else '')
-        generated_capacity = 0.0
-        savings = 0.0
-        try:
-            generated_capacity = float(str(row[2]).replace(',', '').replace('$', '').strip()) if row[2] else 0.0
-        except ValueError:
-            generated_capacity = 0.0
-        try:
-            savings = float(str(row[9]).replace(',', '').replace('$', '').strip()) if len(row) > 9 and row[9] else 0.0
-        except ValueError:
-            savings = 0.0
-        year_summary = efficiency_summary_by_year.setdefault(year_value, {
-            'generated_capacity': 0.0,
-            'savings': 0.0,
-            'gns_generated_capacity': 0.0,
-            'nbte_generated_capacity': 0.0,
-            'gns_savings': 0.0,
-            'nbte_savings': 0.0
-        })
-        year_summary['generated_capacity'] += generated_capacity
-        year_summary['savings'] += savings
-        if team_value == 'GNS':
-            year_summary['gns_generated_capacity'] += generated_capacity
-            year_summary['gns_savings'] += savings
-        else:
-            year_summary['nbte_generated_capacity'] += generated_capacity
-            year_summary['nbte_savings'] += savings
-    efficiency_summary_by_year = sorted(
-        [
-            (
-                year,
-                summary['generated_capacity'],
-                summary['savings'],
-                summary['gns_savings'],
-                summary['nbte_savings'],
-                summary['gns_generated_capacity'],
-                summary['nbte_generated_capacity']
-            )
-            for year, summary in efficiency_summary_by_year.items()
-        ],
-        key=lambda item: item[0]
-    )
+    efficiency_summary_by_year = build_efficiency_summary_by_year(eff_rows_all)
     headcount = db.get_headcount()
     # Recalculate metrics based on updated FTE values
     metrics = recalculate_metrics(spt_rows, eff_rows, headcount, year=year)
@@ -457,33 +541,7 @@ def delete_spt(row_id):
 @csrf_protect
 def add_efficiency():
     if request.method == 'POST':
-        data = {
-            'project_title': request.form['project_title'],
-            'generated_capacity': request.form['generated_capacity'],
-            'project_type': request.form['project_type'],
-            'status': request.form.get('status', 'Initiation'),
-            'year': request.form['year'],
-            'project_owner': request.form.get('project_owner', ''),
-            'description': request.form.get('description', ''),
-            'planned_deployment': request.form.get('planned_deployment', ''),
-            'actual_deployment': request.form.get('actual_deployment', ''),
-            'savings': format_savings_value(request.form.get('savings', '')),
-            'team': request.form.get('team', ''),
-            'project_lead': '',
-            'domestic_reph': request.form.get('domestic_reph', ''),
-            'gptrac': request.form.get('gptrac', ''),
-            'remarks': request.form.get('remarks', ''),
-            'content_process': request.form.get('content_process', ''),
-            'developer': request.form.get('developer', ''),
-            'pbd': request.form.get('pbd', ''),
-            'sbd': request.form.get('sbd', ''),
-            'bu_approved': request.form.get('bu_approved', ''),
-            'uat_from': request.form.get('uat_from', ''),
-            'uat_to': request.form.get('uat_to', ''),
-            'phase_current_end': request.form.get('phase_current_end', ''),
-            'phase_status': request.form.get('phase_status', 'On Track'),
-            'planned_release_date': request.form.get('planned_release_date', '')
-        }
+        data = build_efficiency_payload(request.form, current_status='Initiation')
         db.add_efficiency(data)
         return render_template('close_modal.html')
     return render_template('add_efficiency.html')
@@ -502,33 +560,12 @@ def edit_efficiency(row_id):
         current_project_lead = current_row[11] if current_row and len(current_row) > 11 else ''
         current_remarks = current_row[14] if current_row and len(current_row) > 14 else ''
 
-        data = {
-            'project_title': request.form['project_title'],
-            'generated_capacity': request.form['generated_capacity'],
-            'project_type': request.form['project_type'],
-            'status': request.form.get('status', current_status),
-            'year': request.form['year'],
-            'project_owner': request.form.get('project_owner', ''),
-            'description': request.form.get('description', ''),
-            'planned_deployment': request.form.get('planned_deployment', ''),
-            'actual_deployment': request.form.get('actual_deployment', ''),
-            'savings': format_savings_value(request.form.get('savings', '')),
-            'team': request.form.get('team', ''),
-            'project_lead': current_project_lead,
-            'domestic_reph': request.form.get('domestic_reph', ''),
-            'gptrac': request.form.get('gptrac', ''),
-            'remarks': request.form.get('remarks', current_remarks),
-            'content_process': request.form.get('content_process', ''),
-            'developer': request.form.get('developer', ''),
-            'pbd': request.form.get('pbd', ''),
-            'sbd': request.form.get('sbd', ''),
-            'bu_approved': request.form.get('bu_approved', ''),
-            'uat_from': request.form.get('uat_from', ''),
-            'uat_to': request.form.get('uat_to', ''),
-            'phase_current_end': request.form.get('phase_current_end', ''),
-            'phase_status': request.form.get('phase_status', 'On Track'),
-            'planned_release_date': request.form.get('planned_release_date', '')
-        }
+        data = build_efficiency_payload(
+            request.form,
+            current_status=current_status,
+            current_project_lead=current_project_lead,
+            current_remarks=current_remarks,
+        )
         db.update_efficiency(row_id, data)
         if standalone:
             return redirect(url_for('main.dashboard', message='Efficiency updated successfully.', eff_expanded='1', eff_view=standalone_view))

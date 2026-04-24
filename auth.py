@@ -2,6 +2,7 @@ import os
 import uuid
 import secrets
 from functools import wraps
+from urllib.parse import urlparse
 from flask import Blueprint, session, redirect, request, url_for, current_app, flash
 import msal
 
@@ -67,7 +68,16 @@ def csrf_protect(func):
 
 
 def auth_disabled():
-    return not bool(current_app.config.get('AZURE_CLIENT_SECRET'))
+    return bool(current_app.config.get('ENABLE_LOCAL_AUTH'))
+
+
+def _is_safe_redirect_url(target):
+    if not target:
+        return False
+    target_parts = urlparse(target)
+    if target_parts.scheme or target_parts.netloc:
+        return False
+    return target.startswith('/')
 
 
 def login_required(func):
@@ -79,10 +89,10 @@ def login_required(func):
                     'name': 'Local Demo User',
                     'email': 'local-demo@example.com',
                     'display_name': 'Local Demo User',
-                    'roles': ['Manager'],
+                    'roles': ['Staff'],
                 }
             else:
-                session['next_url'] = request.url
+                session['next_url'] = request.full_path if request.query_string else request.path
                 return redirect(url_for('auth.login'))
         return func(*args, **kwargs)
     return wrapper
@@ -107,9 +117,13 @@ def login():
             'name': 'Local Demo User',
             'email': 'local-demo@example.com',
             'display_name': 'Local Demo User',
-            'roles': ['Manager'],
+            'roles': ['Staff'],
         }
         return redirect(url_for('main.dashboard'))
+    next_url = session.get('next_url')
+    session.clear()
+    if next_url:
+        session['next_url'] = next_url
     return redirect(_build_auth_url())
 
 
@@ -141,17 +155,21 @@ def auth_callback():
     if isinstance(roles, str):
         roles = [roles]
     if not roles:
-        roles = ['Manager']
+        roles = ['Staff']
 
+    next_url = session.pop('next_url', None)
+    session.clear()
     session['user'] = {
         'name': claims.get('name') or claims.get('preferred_username') or claims.get('email'),
         'email': claims.get('preferred_username') or claims.get('email'),
         'display_name': claims.get('name') or claims.get('preferred_username') or claims.get('email'),
         'roles': roles,
     }
+    session['_csrf_token'] = secrets.token_urlsafe(32)
 
-    next_url = session.pop('next_url', None)
-    return redirect(next_url or url_for('main.dashboard'))
+    if not _is_safe_redirect_url(next_url):
+        next_url = url_for('main.dashboard')
+    return redirect(next_url)
 
 
 @auth_bp.route('/logout')

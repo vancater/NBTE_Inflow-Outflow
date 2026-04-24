@@ -3,6 +3,70 @@ from datetime import datetime
 import math
 
 DB_PATH = 'inflow_outflow.db'
+EFFICIENCY_ORDERED_FIELDS = [
+    'project_title',
+    'generated_capacity',
+    'project_type',
+    'status',
+    'year',
+    'project_owner',
+    'description',
+    'planned_deployment',
+    'actual_deployment',
+    'savings',
+    'team',
+    'project_lead',
+    'domestic_reph',
+    'gptrac',
+    'remarks',
+    'content_process',
+    'developer',
+    'pbd',
+    'sbd',
+    'bu_approved',
+    'uat_from',
+    'uat_to',
+    'phase_current_end',
+    'phase_status',
+    'planned_release_date'
+]
+EFFICIENCY_EXTRA_COLUMNS = [
+    'description',
+    'planned_deployment',
+    'savings',
+    'team',
+    'project_lead',
+    'domestic_reph',
+    'gptrac',
+    'remarks',
+    'content_process',
+    'developer',
+    'pbd',
+    'sbd',
+    'bu_approved',
+    'uat_from',
+    'uat_to',
+    'actual_deployment',
+    'phase_current_end',
+    'phase_status',
+    'planned_release_date'
+]
+EFFICIENCY_PLANNED_DATE_SQL = (
+    "CASE "
+    "WHEN length(planned_deployment) = 10 THEN planned_deployment "
+    "WHEN length(planned_deployment) = 7 AND substr(planned_deployment, 5, 1) = '-' AND substr(planned_deployment, 6, 1) != 'Q' THEN planned_deployment || '-01' "
+    "WHEN length(planned_deployment) = 7 AND substr(planned_deployment, 5, 1) = '-' AND substr(planned_deployment, 6, 1) = 'Q' "
+    "THEN substr(planned_deployment, 1, 4) || '-' || "
+    "CASE substr(planned_deployment, 7, 1) "
+    "WHEN '1' THEN '01' "
+    "WHEN '2' THEN '04' "
+    "WHEN '3' THEN '07' "
+    "WHEN '4' THEN '10' "
+    "ELSE '01' END || '-01' "
+    "WHEN length(planned_deployment) = 4 THEN planned_deployment || '-01-01' "
+    "ELSE year || '-01-01' "
+    "END"
+)
 
 class Database:
     def __init__(self):
@@ -41,37 +105,9 @@ class Database:
                 project_owner TEXT
             )
         """)
-        # Ensure project_owner column exists for upgrades
-        try:
-            self.conn.execute("ALTER TABLE efficiencies ADD COLUMN project_owner TEXT")
-        except Exception:
-            pass
-        # Ensure expanded efficiencies fields exist for upgrades
-        for column_name in [
-            'description',
-            'planned_deployment',
-            'savings',
-            'team',
-            'project_lead',
-            'domestic_reph',
-            'gptrac',
-            'remarks',
-            'content_process',
-            'developer',
-            'pbd',
-            'sbd',
-            'bu_approved',
-            'uat_from',
-            'uat_to',
-            'actual_deployment',
-            'phase_current_end',
-            'phase_status',
-            'planned_release_date'
-        ]:
-            try:
-                self.conn.execute(f"ALTER TABLE efficiencies ADD COLUMN {column_name} TEXT")
-            except Exception:
-                pass
+        self._ensure_column_exists('efficiencies', 'project_owner')
+        for column_name in EFFICIENCY_EXTRA_COLUMNS:
+            self._ensure_column_exists('efficiencies', column_name)
         self.conn.execute("""
             CREATE TABLE IF NOT EXISTS spt_settings (
                 category TEXT PRIMARY KEY,
@@ -89,10 +125,7 @@ class Database:
                 changed_by TEXT
             )
         """)
-        try:
-            self.conn.execute("ALTER TABLE spt_settings_history ADD COLUMN changed_by TEXT")
-        except Exception:
-            pass
+        self._ensure_column_exists('spt_settings_history', 'changed_by')
         self.conn.execute("""
             CREATE TABLE IF NOT EXISTS spt_change_log (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -214,16 +247,10 @@ class Database:
                 query += " AND year=?"
                 params.append(filters['year'])
             if 'exact_date' in filters and filters['exact_date']:
-                query += " AND (CASE " \
-                         "WHEN length(year) = 10 THEN year " \
-                         "WHEN length(year) = 7 THEN year || '-01' " \
-                         "ELSE year || '-01-01' END)=?"
+                query += f" AND ({EFFICIENCY_PLANNED_DATE_SQL})=?"
                 params.append(filters['exact_date'])
             if 'from_date' in filters and 'to_date' in filters and filters['from_date'] and filters['to_date']:
-                query += " AND (CASE " \
-                         "WHEN length(year) = 10 THEN year " \
-                         "WHEN length(year) = 7 THEN year || '-01' " \
-                         "ELSE year || '-01-01' END) BETWEEN ? AND ?"
+                query += f" AND ({EFFICIENCY_PLANNED_DATE_SQL}) BETWEEN ? AND ?"
                 params.append(filters['from_date'])
                 params.append(filters['to_date'])
         elif year:
@@ -232,33 +259,6 @@ class Database:
         return self.conn.execute(query, params).fetchall()
 
     def add_efficiency(self, data):
-        ordered_fields = [
-            'project_title',
-            'generated_capacity',
-            'project_type',
-            'status',
-            'year',
-            'project_owner',
-            'description',
-            'planned_deployment',
-            'actual_deployment',
-            'savings',
-            'team',
-            'project_lead',
-            'domestic_reph',
-            'gptrac',
-            'remarks',
-            'content_process',
-            'developer',
-            'pbd',
-            'sbd',
-            'bu_approved',
-            'uat_from',
-            'uat_to',
-            'phase_current_end',
-            'phase_status',
-            'planned_release_date'
-        ]
         self.conn.execute("""
             INSERT INTO efficiencies (
                 project_title, generated_capacity, project_type, status, year, project_owner,
@@ -266,44 +266,31 @@ class Database:
                 developer, pbd, sbd, bu_approved, uat_from, uat_to, phase_current_end, phase_status, planned_release_date
             )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, tuple(data.get(field, '') for field in ordered_fields))
+        """, tuple(data.get(field, '') for field in EFFICIENCY_ORDERED_FIELDS))
         self.conn.commit()
 
+    def _ensure_column_exists(self, table_name, column_name):
+        try:
+            self.conn.execute(f"ALTER TABLE {table_name} ADD COLUMN {column_name} TEXT")
+        except sqlite3.OperationalError as exc:
+            if f"duplicate column name: {column_name}".lower() not in str(exc).lower():
+                raise
+
+    @staticmethod
+    def _parse_float_value(raw_value):
+        try:
+            return float(str(raw_value).replace(',', '').replace('$', '').strip()) if raw_value else 0.0
+        except ValueError:
+            return 0.0
+
     def update_efficiency(self, row_id, data):
-        ordered_fields = [
-            'project_title',
-            'generated_capacity',
-            'project_type',
-            'status',
-            'year',
-            'project_owner',
-            'description',
-            'planned_deployment',
-            'actual_deployment',
-            'savings',
-            'team',
-            'project_lead',
-            'domestic_reph',
-            'gptrac',
-            'remarks',
-            'content_process',
-            'developer',
-            'pbd',
-            'sbd',
-            'bu_approved',
-            'uat_from',
-            'uat_to',
-            'phase_current_end',
-            'phase_status',
-            'planned_release_date'
-        ]
         self.conn.execute("""
             UPDATE efficiencies SET
                 project_title=?, generated_capacity=?, project_type=?, status=?, year=?, project_owner=?,
                 description=?, planned_deployment=?, actual_deployment=?, savings=?, team=?, project_lead=?, domestic_reph=?, gptrac=?, remarks=?, content_process=?,
                 developer=?, pbd=?, sbd=?, bu_approved=?, uat_from=?, uat_to=?, phase_current_end=?, phase_status=?, planned_release_date=?
             WHERE id=?
-        """, tuple(data.get(field, '') for field in ordered_fields) + (row_id,))
+        """, tuple(data.get(field, '') for field in EFFICIENCY_ORDERED_FIELDS) + (row_id,))
         self.conn.commit()
 
     def update_efficiency_remarks(self, row_id, remarks):
@@ -458,8 +445,9 @@ class Database:
         if year:
             eff_year_filter += " AND year = ?"
             eff_params.append(year)
-        eff_total_query = "SELECT SUM(CAST(generated_capacity as FLOAT)) FROM efficiencies" + eff_year_filter
-        eff_total = round_up_2(self.conn.execute(eff_total_query, eff_params).fetchone()[0] or 0)
+        eff_total_query = "SELECT generated_capacity FROM efficiencies" + eff_year_filter
+        eff_total_rows = self.conn.execute(eff_total_query, eff_params).fetchall()
+        eff_total = round_up_2(sum(self._parse_float_value(row[0] if row else 0) for row in eff_total_rows))
 
         headcount = round_up_2(self.get_headcount() or 0)
         diff = round_up_2(headcount - total_fte)

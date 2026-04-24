@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Efficiency</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; font-size: 0.9rem; color: #1a1a2e; background: #f8fafc; }
+        .form-label { font-weight: 500; font-size: 0.82rem; color: #374151; margin-bottom: 4px; }
+    </style>
+</head>
+<body>
+<div class="container py-4" style="max-width:640px;">
+    <div class="mb-3 pb-2" style="border-bottom:2px solid #e67e22;">
+        <h5 class="mb-0 fw-bold" style="color:#b35400;"><i class="bi bi-pencil-square me-2"></i>Edit Efficiency</h5>
+    </div>
+    <form method="post" id="editEfficiencyForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="mb-3">
+            <label class="form-label">Year</label>
+            <input type="text" name="year" class="form-control" value="{{ row[5] }}" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Project Title</label>
+            <input type="text" name="project_title" class="form-control" value="{{ row[1] }}" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Generated Capacity</label>
+            <input type="text" name="generated_capacity" class="form-control" value="{{ row[2] }}" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Category</label>
+            <select name="project_type" class="form-select" required>
+                <option value="AI Agent" {% if row[3] == 'AI Agent' %}selected{% endif %}>AI Agent</option>
+                <option value="Automation" {% if row[3] == 'Automation' %}selected{% endif %}>Automation</option>
+                <option value="Other" {% if row[3] != 'AI Agent' and row[3] != 'Automation' %}selected{% endif %}>Other</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Status</label>
+            <select name="status" class="form-select" required>
+                <option value="Initiation" {% if row[4] == 'Initiation' %}selected{% endif %}>Initiation</option>
+                <option value="Development" {% if row[4] == 'Development' %}selected{% endif %}>Development</option>
+                <option value="Testing" {% if row[4] == 'Testing' %}selected{% endif %}>Testing</option>
+                <option value="Implementation" {% if row[4] == 'Implementation' %}selected{% endif %}>Implementation</option>
+                <option value="Post-Implementation" {% if row[4] == 'Post-Implementation' %}selected{% endif %}>Post-Implementation</option>
+                <option value="Completed" {% if row[4] == 'Completed' %}selected{% endif %}>Completed</option>
+                <option value="Discontinued" {% if row[4] == 'Discontinued' %}selected{% endif %}>Discontinued</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Content Process</label>
+            <input type="text" name="content_process" class="form-control" value="{{ row[15] if row|length > 15 else '' }}">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Project Owner</label>
+            <input type="text" name="project_owner" class="form-control" value="{{ row[6] if row|length > 6 else '' }}">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea name="description" class="form-control" rows="2">{{ row[7] if row|length > 7 else '' }}</textarea>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Planned Deployment</label>
+            <input type="date" name="planned_deployment" id="planned_deployment" class="form-control" value="{{ row[8] if row|length > 8 else '' }}" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Actual Deployment</label>
+            <input type="date" name="actual_deployment" id="actual_deployment" class="form-control" value="{{ row[22] if row|length > 22 else '' }}">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Savings</label>
+            <div class="input-group">
+                <span class="input-group-text">$</span>
+                <input type="text" name="savings" class="form-control" value="{{ (row[9] if row|length > 9 else '').replace('$', '') }}" placeholder="0.00">
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Team</label>
+            <select name="team" class="form-select" required>
+                <option value="Entity" {% if row[10] == 'Entity' %}selected{% endif %}>Entity</option>
+                <option value="GNS" {% if row[10] == 'GNS' %}selected{% endif %}>GNS</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Domestic/REPH</label>
+            <input type="text" name="domestic_reph" class="form-control" value="{{ row[12] if row|length > 12 else '' }}">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">GPTRAC</label>
+            <input type="text" name="gptrac" class="form-control" value="{{ row[13] if row|length > 13 else '' }}">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Developer</label>
+            <input type="text" name="developer" class="form-control" value="{{ row[16] if row|length > 16 else '' }}">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">PBD</label>
+            <select name="pbd" class="form-select">
+                <option value="" {% if not (row[17] if row|length > 17 else '') %}selected{% endif %}>Select</option>
+                <option value="Y" {% if row|length > 17 and row[17] == 'Y' %}selected{% endif %}>Y</option>
+                <option value="N" {% if row|length > 17 and row[17] == 'N' %}selected{% endif %}>N</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">SBD</label>
+            <select name="sbd" class="form-select">
+                <option value="" {% if not (row[18] if row|length > 18 else '') %}selected{% endif %}>Select</option>
+                <option value="Y" {% if row|length > 18 and row[18] == 'Y' %}selected{% endif %}>Y</option>
+                <option value="N" {% if row|length > 18 and row[18] == 'N' %}selected{% endif %}>N</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">BU Approved</label>
+            <select name="bu_approved" class="form-select">
+                <option value="" {% if not (row[19] if row|length > 19 else '') %}selected{% endif %}>Select</option>
+                <option value="Y" {% if row|length > 19 and row[19] == 'Y' %}selected{% endif %}>Y</option>
+                <option value="N" {% if row|length > 19 and row[19] == 'N' %}selected{% endif %}>N</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">UAT</label>
+            <div class="row g-2">
+                <div class="col-6">
+                    <input type="date" name="uat_from" class="form-control" value="{{ row[20] if row|length > 20 else '' }}" placeholder="From">
+                </div>
+                <div class="col-6">
+                    <input type="date" name="uat_to" class="form-control" value="{{ row[21] if row|length > 21 else '' }}" placeholder="To">
+                </div>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Current End Phase</label>
+            <input type="date" name="phase_current_end" class="form-control" value="{{ row[23] if row|length > 23 else '' }}">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Phase Status</label>
+            <select name="phase_status" class="form-select">
+                <option value="On Track" {% if row|length > 24 and row[24] == 'On Track' %}selected{% endif %}>On Track</option>
+                <option value="Slight Delay" {% if row|length > 24 and row[24] == 'Slight Delay' %}selected{% endif %}>Slight Delay</option>
+                <option value="Delay" {% if row|length > 24 and row[24] == 'Delay' %}selected{% endif %}>Delay</option>
+                <option value="Completed" {% if row|length > 24 and row[24] == 'Completed' %}selected{% endif %}>Completed</option>
+                <option value="Discontinued" {% if row|length > 24 and row[24] == 'Discontinued' %}selected{% endif %}>Discontinued</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Planned Release Date</label>
+            <input type="date" name="planned_release_date" class="form-control" value="{{ row[25] if row|length > 25 else '' }}">
+        </div>
+        <div class="d-flex gap-2 mt-3">
+            <button type="submit" class="btn btn-warning btn-sm px-4 fw-semibold"><i class="bi bi-check2 me-1"></i>Save</button>
+            {% if standalone %}
+            <a href="{{ url_for('main.dashboard', eff_expanded='1', eff_view=standalone_view) }}" class="btn btn-outline-secondary btn-sm">Cancel</a>
+            {% else %}
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.parent.postMessage('closeModal', '*')">Cancel</button>
+            {% endif %}
+        </div>
+    </form>
+</div>
+<script>
+window.addEventListener('message', function(event) {
+    if (event.data === 'closeModal') {
+        window.close();
+    }
+});
+const form = document.getElementById('editEfficiencyForm');
+function initializePlannedDeploymentInput() {
+    const plannedDeploymentEl = document.getElementById('planned_deployment');
+    if (!plannedDeploymentEl) return;
+
+    const raw = (plannedDeploymentEl.value || '').trim();
+    const matchQuarter = raw.match(/^(\d{4})-(Q[1-4])$/i);
+    const matchMonth = raw.match(/^(\d{4})-(\d{2})$/);
+
+    if (matchQuarter) {
+        const quarterMonthMap = { Q1: '01', Q2: '04', Q3: '07', Q4: '10' };
+        const quarter = matchQuarter[2].toUpperCase();
+        plannedDeploymentEl.value = `${matchQuarter[1]}-${quarterMonthMap[quarter]}-01`;
+    } else if (matchMonth) {
+        plannedDeploymentEl.value = `${matchMonth[1]}-${matchMonth[2]}-01`;
+    }
+}
+
+initializePlannedDeploymentInput();
+
+form.addEventListener('submit', function() {
+    {% if not standalone %}
+    setTimeout(function() {
+        window.parent.postMessage('closeModal', '*');
+    }, 100);
+    {% endif %}
+});
+</script>
+</body>
+</html>

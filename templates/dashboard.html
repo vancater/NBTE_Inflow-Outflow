@@ -1,0 +1,3543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>NBTE Inflow-Outflow Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        body { background: #f0f4f8; font-family: 'Inter', sans-serif; font-size: 0.9rem; color: #1a1a2e; }
+        /* ── Header bar ── */
+        .dashboard-header {
+            background: linear-gradient(135deg, #1a5f5c 0%, #1f7f7c 100%);
+            color: #fff;
+            border-radius: 12px;
+            padding: 16px 24px;
+            margin-bottom: 0;
+            box-shadow: 0 4px 16px rgba(31,127,124,0.18);
+        }
+        .dashboard-header h2 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            margin: 0;
+        }
+        /* ── Metric KPI row ── */
+        .metrics-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .metric-card {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(44,62,80,0.07);
+            padding: 14px 20px;
+            flex: 1 1 120px;
+            min-width: 120px;
+            border-top: 3px solid #1f7f7c;
+            transition: box-shadow 0.15s;
+        }
+        .metric-card:hover { box-shadow: 0 4px 16px rgba(44,62,80,0.13); }
+        .metric-title {
+            color: #6b7280;
+            font-weight: 600;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 4px;
+        }
+        .metric-value {
+            font-size: 1.6rem;
+            color: #1f7f7c;
+            font-weight: 700;
+            line-height: 1.1;
+        }
+        .overstaffed-card { border-top-color: #0074d9 !important; }
+        .understaffed-card { border-top-color: #d90429 !important; }
+        .overstaffed-text { color: #0074d9 !important; }
+        .understaffed-text { color: #d90429 !important; }
+        /* ── Clock ── */
+        .clock-display {
+            font-size: 0.82rem;
+            color: rgba(255,255,255,0.9);
+            font-family: 'Inter', monospace;
+            font-weight: 500;
+            text-align: right;
+        }
+        .clock-time { font-size: 1rem; font-weight: 700; display: block; }
+        .clock-date { font-size: 0.75rem; margin-top: 1px; opacity: 0.85; }
+        /* ── Filter card ── */
+        .filter-card {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 1px 6px rgba(44,62,80,0.07);
+            padding: 14px 18px;
+            margin-bottom: 20px;
+        }
+        .filter-card .filter-label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #6b7280;
+            margin-bottom: 3px;
+        }
+        /* ── Tables ── */
+        .table th, .table td { vertical-align: middle; }
+        .table thead th {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: #f8fafc !important;
+            color: #374151;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        .table tbody tr:hover { background: #f0fafa; }
+        .content-summary-table thead th { background: #f0fafa !important; }
+        /* ── Status badges ── */
+        .badge-inflow  { background: #d1fae5; color: #065f46; font-size: 0.72rem; font-weight: 600; padding: 3px 9px; border-radius: 20px; display: inline-block; }
+        .badge-outflow { background: #fee2e2; color: #991b1b; font-size: 0.72rem; font-weight: 600; padding: 3px 9px; border-radius: 20px; display: inline-block; }
+        .badge-eff-initiation { background: #e0f2fe; color: #075985; font-size: 0.72rem; font-weight: 600; padding: 3px 9px; border-radius: 20px; display: inline-block; }
+        .badge-eff-development { background: #ede9fe; color: #5b21b6; font-size: 0.72rem; font-weight: 600; padding: 3px 9px; border-radius: 20px; display: inline-block; }
+        .badge-eff-testing { background: #fef3c7; color: #92400e; font-size: 0.72rem; font-weight: 600; padding: 3px 9px; border-radius: 20px; display: inline-block; }
+        .badge-eff-implementation { background: #d1fae5; color: #065f46; font-size: 0.72rem; font-weight: 600; padding: 3px 9px; border-radius: 20px; display: inline-block; }
+        .badge-eff-post-implementation { background: #cffafe; color: #155e75; font-size: 0.72rem; font-weight: 600; padding: 3px 9px; border-radius: 20px; display: inline-block; }
+        .badge-eff-completed { background: #dcfce7; color: #166534; font-size: 0.72rem; font-weight: 600; padding: 3px 9px; border-radius: 20px; display: inline-block; }
+        .badge-eff-discontinued { background: #e5e7eb; color: #374151; font-size: 0.72rem; font-weight: 600; padding: 3px 9px; border-radius: 20px; display: inline-block; }
+        .badge-yes { background: #dcfce7; color: #166534; font-size: 0.72rem; font-weight: 700; padding: 3px 9px; border-radius: 20px; display: inline-block; min-width: 32px; text-align: center; }
+        .badge-no { background: #fee2e2; color: #991b1b; font-size: 0.72rem; font-weight: 700; padding: 3px 9px; border-radius: 20px; display: inline-block; min-width: 32px; text-align: center; }
+        .badge-empty { background: #f3f4f6; color: #6b7280; font-size: 0.72rem; font-weight: 700; padding: 3px 9px; border-radius: 20px; display: inline-block; min-width: 32px; text-align: center; }
+        /* ── Action buttons ── */
+        .btn-action { min-width: 70px; font-weight: 500; }
+        /* ── Card headers ── */
+        .card-header { font-weight: 600; font-size: 0.85rem; letter-spacing: 0.03em; }
+        /* ── Footer ── */
+        .app-footer {
+            margin-top: 36px;
+            padding: 16px 0 8px;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #9ca3af;
+        }
+        /* ── Modal backdrop ── */
+        .modal-backdrop.show { opacity: 0.25; }
+        .efficiencies-scroll {
+            max-height: 300px;
+            overflow-y: auto;
+            overflow-x: auto;
+        }
+        .efficiencies-scroll table {
+            width: max-content;
+            min-width: 100%;
+        }
+        .efficiencies-scroll thead th {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        .efficiencies-card {
+            will-change: transform, opacity;
+        }
+        .efficiencies-header-actions {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .efficiencies-header-main {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            gap: 12px;
+        }
+        .efficiencies-header-stack {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+            width: 100%;
+        }
+        .efficiencies-view-tabs {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+            max-width: none;
+            width: 100%;
+        }
+        .efficiencies-tab-btn {
+            border-radius: 999px;
+            padding: 0.34rem 0.7rem;
+            font-size: 0.83rem;
+            line-height: 1.15;
+            min-height: 34px;
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .efficiencies-tab-btn i {
+            font-size: 0.78rem;
+            margin-right: 0.32rem !important;
+        }
+        .efficiencies-close-btn {
+            display: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 999px;
+            padding: 0;
+            align-items: center;
+            justify-content: center;
+        }
+        .efficiencies-card.expanded .efficiencies-view-tabs {
+            background: rgba(255, 255, 255, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            border-radius: 18px;
+            padding: 3px;
+            gap: 6px;
+        }
+        .efficiencies-card.expanded .efficiencies-tab-btn {
+            background: transparent;
+            border-color: transparent;
+            color: rgba(255, 255, 255, 0.88);
+            box-shadow: none;
+            font-weight: 600;
+            flex: 0 0 auto;
+        }
+        .efficiencies-card.expanded .efficiencies-tab-btn.active {
+            background: #ffffff;
+            color: #137a43;
+            border-color: #ffffff;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.1);
+        }
+        .efficiencies-card.expanded #phaseSummaryExpandBtn,
+        .efficiencies-card.expanded #efficienciesExpandBtn,
+        .efficiencies-card.expanded #savingsSummaryExpandBtn {
+            width: calc(33.333% - 4px);
+            justify-content: center;
+        }
+        .efficiencies-card.expanded .efficiencies-close-btn {
+            display: inline-flex;
+        }
+        @media (max-width: 900px) {
+            .efficiencies-header-main {
+                align-items: flex-start;
+            }
+            .efficiencies-header-stack {
+                gap: 6px;
+            }
+            .efficiencies-header-actions {
+                align-items: flex-end;
+            }
+            .efficiencies-card.expanded .efficiencies-view-tabs {
+                border-radius: 16px;
+            }
+            .efficiencies-tab-btn {
+                font-size: 0.78rem;
+                padding: 0.32rem 0.6rem;
+            }
+            .efficiencies-card.expanded #phaseSummaryExpandBtn,
+            .efficiencies-card.expanded #efficienciesExpandBtn,
+            .efficiencies-card.expanded #savingsSummaryExpandBtn {
+                width: 100%;
+            }
+        }
+        .efficiencies-card.expanded {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            left: 20px;
+            z-index: 1040;
+            margin: 0 !important;
+            height: calc(100vh - 40px);
+            font-size: 90%;
+            display: flex;
+            flex-direction: column;
+        }
+        .efficiencies-card.expanded .card-body {
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .efficiencies-card.expanded .efficiencies-scroll {
+            flex: 0 1 auto;
+            width: 100%;
+            min-height: 0;
+            max-height: calc(100vh - 220px);
+            align-self: flex-start;
+            overflow: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .efficiencies-card.expanded th.eff-description-col,
+        .efficiencies-card.expanded td.eff-description-col {
+            width: 280px;
+            min-width: 280px;
+            max-width: 280px;
+        }
+        .efficiencies-card.expanded .expand-only-block {
+            background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+            border-bottom: 1px solid #dbe4ee;
+            padding: 12px 14px !important;
+        }
+        .efficiencies-card.expanded .expand-only-block .form-label {
+            font-size: 0.73rem;
+            font-weight: 700;
+            color: #475569;
+            letter-spacing: 0.02em;
+            margin-bottom: 4px;
+        }
+        .efficiencies-card.expanded .expand-only-block .form-select,
+        .efficiencies-card.expanded .expand-only-block .btn {
+            min-height: 36px;
+        }
+        .efficiencies-card.expanded .efficiencies-scroll .table {
+            font-size: 0.84rem;
+            color: #1f2937;
+        }
+        .efficiencies-card.expanded .efficiencies-scroll .table thead th {
+            background: #edf2f7 !important;
+            color: #475569;
+            border-bottom: 1px solid #cfd8e3;
+            border-right: 1px solid #d9e2ec;
+            padding: 8px 6px;
+        }
+        .efficiencies-card.expanded .efficiencies-scroll .table td {
+            padding: 7px 6px;
+            border-color: #dde6ef;
+            vertical-align: top;
+            line-height: 1.35;
+            background: #ffffff;
+        }
+        .efficiencies-card.expanded .eff-main-row:nth-of-type(4n+1) td,
+        .efficiencies-card.expanded .eff-main-row:nth-of-type(4n+2) td {
+            background: #fbfdff;
+        }
+        .efficiencies-card.expanded .eff-main-row:hover td {
+            background: #f3f8fc;
+        }
+        .efficiencies-card.expanded .table .eff-sticky-year {
+            position: sticky;
+            left: 0;
+            z-index: 3;
+            min-width: 72px;
+            background: inherit;
+            box-shadow: 1px 0 0 #dbe4ee;
+        }
+        .efficiencies-card.expanded .table .eff-sticky-title {
+            position: sticky;
+            left: 72px;
+            z-index: 3;
+            min-width: 170px;
+            background: inherit;
+            box-shadow: 1px 0 0 #dbe4ee;
+        }
+        .efficiencies-card.expanded .table thead .eff-sticky-year,
+        .efficiencies-card.expanded .table thead .eff-sticky-title {
+            z-index: 4;
+            background: #edf2f7 !important;
+        }
+        .efficiencies-card.expanded .table .eff-group-start {
+            border-left: 2px solid #cfd8e3 !important;
+        }
+        .efficiencies-card.expanded .table .eff-actions-col {
+            min-width: 128px;
+            white-space: nowrap;
+        }
+        .efficiencies-card.expanded .table .eff-owner-col {
+            min-width: 170px;
+        }
+        .efficiencies-card.expanded .eff-description-text {
+            white-space: normal;
+            word-break: break-word;
+            overflow: hidden;
+            line-height: 1.25;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 5;
+            line-clamp: 5;
+        }
+        .efficiencies-card:not(.expanded) .efficiencies-scroll {
+            display: none;
+        }
+        .summary-only-block {
+            display: none;
+        }
+        .phase-only-block {
+            display: none;
+        }
+        .efficiencies-card.expanded.summary-mode .summary-only-block {
+            display: block;
+        }
+        .efficiencies-card.expanded.phase-mode .phase-only-block {
+            display: block;
+        }
+        .efficiencies-card.expanded.summary-mode .expand-only-block,
+        .efficiencies-card.expanded.summary-mode .efficiencies-scroll {
+            display: none;
+        }
+        .efficiencies-card.expanded.phase-mode .expand-only-block,
+        .efficiencies-card.expanded.phase-mode .summary-only-block,
+        .efficiencies-card.expanded.phase-mode .efficiencies-scroll {
+            display: none;
+        }
+        .efficiencies-card.expanded.summary-mode .card-body {
+            overflow-y: auto;
+        }
+        .efficiencies-card.expanded.phase-mode .card-body {
+            overflow-y: auto;
+        }
+        .savings-summary-shell {
+            padding: 14px;
+            background: #f8fbfd;
+        }
+        .phase-summary-shell {
+            padding: 14px;
+            background: linear-gradient(180deg, #f7fafc 0%, #eef5fb 100%);
+        }
+        .savings-filter-card,
+        .savings-section-card,
+        .phase-filter-card,
+        .phase-section-card {
+            background: #fff;
+            border: 1px solid #dbe5ee;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+        }
+        .savings-filter-card {
+            padding: 14px;
+            margin-bottom: 14px;
+        }
+        .phase-filter-card {
+            padding: 14px;
+            margin-bottom: 14px;
+        }
+        .savings-filter-card .form-label {
+            font-size: 0.73rem;
+            font-weight: 700;
+            color: #475569;
+            margin-bottom: 4px;
+        }
+        .phase-filter-card .form-label {
+            font-size: 0.73rem;
+            font-weight: 700;
+            color: #475569;
+            margin-bottom: 4px;
+        }
+        .savings-kpis {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        .savings-kpi {
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+            border: 1px solid #dbe5ee;
+            border-radius: 12px;
+            padding: 12px 14px;
+        }
+        .savings-kpi-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 4px;
+        }
+        .savings-kpi-value {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1.1;
+        }
+        .savings-kpi-sub {
+            font-size: 0.76rem;
+            color: #64748b;
+            margin-top: 4px;
+        }
+        .savings-chart-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+        .savings-section-card {
+            padding: 14px;
+        }
+        .savings-section-title {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 10px;
+        }
+        .savings-bars {
+            display: grid;
+            gap: 10px;
+        }
+        .savings-bar-row {
+            display: grid;
+            grid-template-columns: 82px 1fr 70px;
+            gap: 10px;
+            align-items: center;
+            font-size: 0.82rem;
+        }
+        .savings-bar-label {
+            color: #475569;
+            font-weight: 700;
+        }
+        .savings-bar-track {
+            display: flex;
+            width: 100%;
+            height: 12px;
+            background: #e5edf5;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+        .savings-bar-gns {
+            background: linear-gradient(90deg, #0ea5a4 0%, #14b8a6 100%);
+        }
+        .savings-bar-entity {
+            background: linear-gradient(90deg, #2563eb 0%, #3b82f6 100%);
+        }
+        .savings-bar-value {
+            text-align: right;
+            color: #334155;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+        .savings-donut-wrap {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            justify-content: center;
+            min-height: 180px;
+        }
+        .savings-donut {
+            --gns-angle: 180deg;
+            width: 148px;
+            height: 148px;
+            border-radius: 50%;
+            background: conic-gradient(#14b8a6 0deg var(--gns-angle), #3b82f6 var(--gns-angle) 360deg);
+            position: relative;
+            flex: 0 0 auto;
+        }
+        .savings-donut::after {
+            content: "";
+            position: absolute;
+            inset: 24px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: inset 0 0 0 1px #dbe5ee;
+        }
+        .savings-legend {
+            display: grid;
+            gap: 10px;
+            min-width: 150px;
+        }
+        .savings-legend-item {
+            display: grid;
+            grid-template-columns: 12px 1fr;
+            gap: 8px;
+            align-items: start;
+            font-size: 0.82rem;
+        }
+        .savings-legend-swatch {
+            width: 12px;
+            height: 12px;
+            border-radius: 999px;
+            margin-top: 3px;
+        }
+        .savings-legend-main {
+            display: block;
+            color: #0f172a;
+            font-weight: 700;
+        }
+        .savings-legend-sub {
+            display: block;
+            color: #64748b;
+            font-size: 0.76rem;
+        }
+        .savings-tables-grid {
+            display: grid;
+            grid-template-columns: 1.15fr 1fr;
+            gap: 14px;
+        }
+        .savings-summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+        }
+        .savings-summary-table th,
+        .savings-summary-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #e2e8f0;
+            text-align: left;
+            vertical-align: middle;
+        }
+        .savings-summary-table th {
+            font-size: 0.73rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .savings-summary-table td.text-end,
+        .savings-summary-table th.text-end {
+            text-align: right;
+        }
+        .team-pill {
+            display: inline-block;
+            padding: 3px 9px;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+        .team-pill.gns {
+            background: #ccfbf1;
+            color: #115e59;
+        }
+        .team-pill.entity {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+        .phase-section-card {
+            padding: 0;
+            overflow: hidden;
+        }
+        .phase-summary-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 18px 8px;
+        }
+        .phase-summary-title {
+            font-size: 1rem;
+            font-weight: 800;
+            color: #0f172a;
+        }
+        .phase-summary-subtitle {
+            color: #64748b;
+            font-size: 0.8rem;
+        }
+        .phase-table-wrap {
+            padding: 0 14px 14px;
+        }
+        .phase-summary-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 0.84rem;
+        }
+        .phase-summary-table th {
+            background: #f4f8fb;
+            color: #64748b;
+            font-size: 0.73rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            padding: 11px 14px;
+            border-bottom: 1px solid #dbe5ee;
+            text-align: left;
+        }
+        .phase-summary-table td {
+            padding: 14px;
+            border-bottom: 1px solid #e7eef5;
+            vertical-align: top;
+            color: #1f2937;
+        }
+        .phase-summary-table tbody tr:hover td {
+            background: #f8fbfd;
+        }
+        .phase-project-name {
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .phase-name-sub {
+            display: block;
+            margin-top: 3px;
+            font-size: 0.78rem;
+            color: #64748b;
+        }
+        .phase-chip {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: 5px 10px;
+            font-size: 0.76rem;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            white-space: nowrap;
+        }
+        .phase-chip.phase-track {
+            background: #e7f6ec;
+            color: #177245;
+        }
+        .phase-chip.phase-slight-delay {
+            background: #fff5db;
+            color: #946200;
+        }
+        .phase-chip.phase-delay {
+            background: #fee7e7;
+            color: #b42318;
+        }
+        .phase-chip.phase-completed {
+            background: #e0ecff;
+            color: #1d4ed8;
+        }
+        .phase-chip.phase-discontinued {
+            background: #eceff3;
+            color: #475467;
+        }
+        .phase-text-muted {
+            color: #64748b;
+        }
+        .phase-action-link {
+            white-space: nowrap;
+        }
+        @media (max-width: 992px) {
+            .savings-chart-grid,
+            .savings-tables-grid {
+                grid-template-columns: 1fr;
+            }
+            .savings-donut-wrap {
+                justify-content: flex-start;
+            }
+        }
+        .collapsed-summary {
+            display: block;
+            padding: 1rem;
+        }
+        .efficiencies-card.expanded .collapsed-summary {
+            display: none;
+        }
+        .expand-only-col {
+            display: none;
+        }
+        .efficiencies-card.expanded .expand-only-col {
+            display: table-cell;
+        }
+        .expand-only-inline {
+            display: none;
+        }
+        .efficiencies-card.expanded .expand-only-inline {
+            display: inline-block;
+        }
+        .eff-remarks-row {
+            display: none;
+            background: #f8fbff;
+        }
+        .eff-remarks-panel {
+            border: 1px solid #d8e9ff;
+            border-radius: 6px;
+            background: #fff;
+            padding: 10px;
+        }
+        .eff-remarks-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: flex-start;
+        }
+        .eff-remarks-item {
+            flex: 0 0 400px;
+            max-width: 400px;
+        }
+        .eff-remarks-label {
+            font-weight: 700;
+        }
+        .eff-remarks-input {
+            width: 100%;
+            min-height: 34px;
+            resize: vertical;
+            font-size: 0.9rem;
+        }
+        .expand-only-block {
+            display: none;
+        }
+        .efficiencies-card.expanded .expand-only-block {
+            display: block;
+        }
+        .efficiencies-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.35);
+            z-index: 1039;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.22s ease, visibility 0.22s ease;
+        }
+        .efficiencies-backdrop.show {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+        .email-project-list {
+            max-height: 240px;
+            overflow-y: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 8px 10px;
+            background: #fff;
+        }
+        .email-project-list .form-check {
+            margin-bottom: 6px;
+        }
+        .dashboard-email-category-group.is-disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        body.no-scroll {
+            overflow: hidden;
+        }
+        @media (max-width: 768px) {
+            .efficiencies-card.expanded {
+                top: 8px;
+                right: 8px;
+                left: 8px;
+                height: calc(100vh - 16px);
+            }
+            .efficiencies-card.expanded .expand-only-block {
+                flex: 0 0 auto;
+            }
+            .efficiencies-card.expanded .efficiencies-scroll {
+                scrollbar-gutter: auto;
+            }
+            .eff-remarks-item {
+                flex-basis: 100%;
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container py-4">
+    {% if message %}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        {% for msg in messages %}
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            {{ msg }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    <!-- Header bar -->
+    <div class="dashboard-header mb-3 d-flex align-items-center justify-content-between">
+        <div>
+            <h2><i class="bi bi-bar-chart-line-fill me-2"></i>NBTE Inflow-Outflow Dashboard</h2>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <div class="clock-display me-3" id="clockDisplay">
+                <span class="clock-time" id="clockTime">00:00:00</span>
+                <span class="clock-date" id="clockDate">Mon, Jan 1, 2024</span>
+            </div>
+            {% if current_user %}
+            <div class="text-white small me-2 d-none d-lg-inline">Signed in as {{ current_user.name or current_user.email }}</div>
+            {% endif %}
+            <a href="#" class="btn btn-light btn-sm btn-action fw-semibold" data-bs-toggle="modal" data-bs-target="#addSptModal">
+                <i class="bi bi-plus-circle me-1"></i>Add SPT
+            </a>
+            <a href="#" class="btn btn-outline-light btn-sm btn-action fw-semibold" data-bs-toggle="modal" data-bs-target="#settingsModal">
+                <i class="bi bi-gear me-1"></i>Settings
+            </a>
+            <a href="#" class="btn btn-outline-light btn-sm btn-action fw-semibold" id="emailDashboardBtn" title="Send Email">
+                <i class="bi bi-envelope me-1"></i>Email
+            </a>
+            {% if current_user %}
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-light btn-sm btn-action fw-semibold" title="Sign out">
+                <i class="bi bi-box-arrow-right me-1"></i>Sign out
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    <!-- KPI Metrics row -->
+    <div class="metrics-row mb-3">
+        <div class="metric-card">
+            <div class="metric-title">Headcount</div>
+            <div class="metric-value">{{ metrics.headcount }}</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-title">FTE Requirement</div>
+            <div class="metric-value">{{ metrics.total_fte }}</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-title">Total Inflow (FTE)</div>
+            <div class="metric-value">{{ metrics.total_inflow }}</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-title">Outflow (FTE)</div>
+            <div class="metric-value">{{ metrics.total_outflow }}</div>
+        </div>
+        <div class="metric-card {% if metrics.overstaffed %}overstaffed-card{% else %}understaffed-card{% endif %}">
+            <div class="metric-title">{% if metrics.overstaffed %}OVERSTAFFED{% else %}UNDERSTAFFED{% endif %}</div>
+            <div class="metric-value {% if metrics.overstaffed %}overstaffed-text{% else %}understaffed-text{% endif %}">{{ metrics.diff }}</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-title">GNS Efficiencies (FTE)</div>
+            <div class="metric-value">{{ metrics.gns_eff_total }}</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-title">Entity Efficiencies (FTE)</div>
+            <div class="metric-value">{{ metrics.entity_eff_total }}</div>
+        </div>
+    </div>
+    <!-- Filter bar -->
+    <div class="filter-card">
+        <form method="get" action="/" class="filter-form">
+            <div class="row g-2 align-items-end">
+                <div class="col-auto">
+                    <div class="filter-label">Status</div>
+                    <select name="status" class="form-select form-select-sm">
+                        <option value="" {% if not filter_status %}selected{% endif %}>All</option>
+                        <option value="Inflow" {% if filter_status == 'Inflow' %}selected{% endif %}>Inflow</option>
+                        <option value="Outflow" {% if filter_status == 'Outflow' %}selected{% endif %}>Outflow</option>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <div class="filter-label">Year</div>
+                    <select name="year" class="form-select form-select-sm">
+                        <option value="" {% if not filter_year %}selected{% endif %}>All</option>
+                        {% for y in years %}
+                        <option value="{{ y }}" {% if filter_year == y|string %}selected{% endif %}>{{ y }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <div class="filter-label">Month</div>
+                    <select name="month" class="form-select form-select-sm">
+                        <option value="" {% if not filter_month %}selected{% endif %}>All</option>
+                        {% for mval, mname in months %}
+                        <option value="{{ mval }}" {% if filter_month == mval %}selected{% endif %}>{{ mname }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <div class="filter-label">Exact Date</div>
+                    <input type="date" name="exact_date" class="form-control form-control-sm" value="{{ filter_exact_date or '' }}">
+                </div>
+                <div class="col-auto">
+                    <div class="filter-label">From</div>
+                    <input type="date" name="from_date" class="form-control form-control-sm" value="{{ filter_from_date or '' }}">
+                </div>
+                <div class="col-auto">
+                    <div class="filter-label">To</div>
+                    <input type="date" name="to_date" class="form-control form-control-sm" value="{{ filter_to_date or '' }}">
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary btn-sm px-3"><i class="bi bi-funnel me-1"></i>Filter</button>
+                    <a href="/" class="btn btn-outline-secondary btn-sm ms-1">Clear</a>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white"><i class="bi bi-table me-1"></i>SPT Table</div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Endorsed Date</th>
+                                    <th>Content Type</th>
+                                    <th>FTE Requirement</th>
+                                    <th style="display:none;">Remaining FTE Capacity</th>
+                                    <th>Frequency</th>
+                                    <th>SPT</th>
+                                    <th>Average Volume</th>
+                                    <th>Working Minutes</th>
+                                    <th>Status</th>
+                                    <th style="min-width:120px;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for row in spt_rows %}
+                                <tr>
+                                    <td>{{ row[1] }}</td>
+                                    <td>{{ row[2] }}</td>
+                                    <td class="fw-semibold">{{ row[3] }}</td>
+                                    <td style="display:none;">{{ row[4] }}</td>
+                                    <td>{{ row[5] }}</td>
+                                    <td>{{ row[6] }}</td>
+                                    <td>{{ row[7] }}</td>
+                                    <td>{{ row[8] | int }}</td>
+                                    <td>
+                                        {% if row[9] == 'Inflow' %}
+                                        <span class="badge-inflow">Inflow</span>
+                                        {% else %}
+                                        <span class="badge-outflow">Outflow</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="#" class="btn btn-sm btn-warning me-1" data-edit-spt="{{ url_for('main.edit_spt', row_id=row[0]) }}"><i class="bi bi-pencil"></i></a>
+                                        <button type="button" class="btn btn-sm btn-danger" onclick="confirmDeleteSpt(this)" data-url="{{ url_for('main.delete_spt', row_id=row[0]) }}"><i class="bi bi-trash"></i></button>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr><td colspan="10" class="text-center text-muted py-3"><i class="bi bi-inbox me-1"></i>No SPT entries. Click <strong>Add SPT</strong> to get started.</td></tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="card shadow-sm mb-4 efficiencies-card" id="efficienciesCard">
+                <div class="card-header bg-success text-white">
+                    <div class="efficiencies-header-main">
+                        <div class="efficiencies-header-stack">
+                            <span class="fw-semibold flex-shrink-0"><i class="bi bi-lightning-charge me-1"></i>Efficiencies</span>
+                            <div class="efficiencies-header-actions">
+                                <div class="efficiencies-view-tabs" role="tablist" aria-label="Efficiencies views">
+                                    <button type="button" class="btn btn-sm btn-outline-light fw-semibold efficiencies-tab-btn" id="phaseSummaryExpandBtn" title="Expand Efficiencies Phase" role="tab" aria-selected="false"><i class="bi bi-diagram-3 me-1"></i>Efficiencies Phase</button>
+                                    <button type="button" class="btn btn-sm btn-outline-light fw-semibold efficiencies-tab-btn" id="efficienciesExpandBtn" title="Expand" role="tab" aria-selected="false"><i class="bi bi-arrows-fullscreen me-1"></i>Efficiencies</button>
+                                    <button type="button" class="btn btn-sm btn-outline-light fw-semibold efficiencies-tab-btn" id="savingsSummaryExpandBtn" title="Expand Savings Summary" role="tab" aria-selected="false"><i class="bi bi-graph-up-arrow me-1"></i>Savings Summary</button>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-light efficiencies-close-btn" id="efficienciesCloseBtn" title="Close expanded view" aria-label="Close expanded view"><i class="bi bi-x-lg"></i></button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="collapsed-summary">
+                        <div class="d-flex justify-content-between align-items-center mb-2 px-3 pt-3">
+                            <div class="fw-semibold">Yearly Efficiency Summary</div>
+                            <div class="text-muted small">{{ eff_rows_all|length }} item{{ '' if eff_rows_all|length == 1 else 's' }}</div>
+                        </div>
+                        {% if efficiency_summary_by_year %}
+                        <div class="table-responsive px-3 pb-3">
+                            <table class="table table-sm table-borderless mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Year</th>
+                                        <th class="text-end">GNS Total Generated Capacity</th>
+                                        <th class="text-end">GNS Total Savings</th>
+                                        <th class="text-end">Entity Total Generated Capacity</th>
+                                        <th class="text-end">Entity Total Savings</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for year, total_generated_capacity, total_savings, gns_savings, nbte_savings, gns_generated_capacity, nbte_generated_capacity in efficiency_summary_by_year %}
+                                    <tr>
+                                        <td>{{ year }}</td>
+                                        <td class="text-end">{{ "{:,.2f}".format(gns_generated_capacity) }}</td>
+                                        <td class="text-end">${{ "{:,.2f}".format(gns_savings) }}</td>
+                                        <td class="text-end">{{ "{:,.2f}".format(nbte_generated_capacity) }}</td>
+                                        <td class="text-end">${{ "{:,.2f}".format(nbte_savings) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center text-muted small py-3 px-3">No efficiencies to show.</div>
+                        {% endif %}
+                    </div>
+                    <div class="expand-only-block p-2 border-bottom bg-light">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-3">
+                                <label class="form-label mb-1">Year</label>
+                                <select id="effFilterYear" class="form-select form-select-sm">
+                                    <option value="">All</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label mb-1">Planned Deployment</label>
+                                <div class="row g-1">
+                                    <div class="col-6">
+                                        <select id="effFilterPlannedFrom" class="form-select form-select-sm">
+                                            <option value="">From</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-6">
+                                        <select id="effFilterPlannedTo" class="form-select form-select-sm">
+                                            <option value="">To</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label mb-1">Team</label>
+                                <select id="effFilterTeam" class="form-select form-select-sm">
+                                    <option value="">All</option>
+                                    <option value="Entity">Entity</option>
+                                    <option value="GNS">GNS</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label mb-1">Status</label>
+                                <select id="effFilterStatus" class="form-select form-select-sm">
+                                    <option value="">All</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="button" class="btn btn-outline-secondary btn-sm w-100" id="effClearFilters">Clear Filters</button>
+                            </div>
+                            <div class="col-md-3 ms-auto">
+                                <a href="#" class="btn btn-success btn-sm w-100" data-bs-toggle="modal" data-bs-target="#addEfficiencyModal">Add Efficiency</a>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="button" class="btn btn-outline-primary btn-sm w-100" id="emailEfficienciesBtn">Email Efficiencies</button>
+                            </div>
+                            <div class="col-12 text-end mt-1">
+                                <strong>Total Generated Capacity (Displayed): </strong><span id="effGeneratedCapacityTotal">0.00</span>
+                            </div>
+                            <div class="col-12 text-end mt-1">
+                                <strong>Total Savings (Displayed): </strong><span id="effSavingsTotal">$0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="summary-only-block">
+                        <div class="savings-summary-shell">
+                            <div class="savings-filter-card">
+                                <div class="row g-2 align-items-end">
+                                    <div class="col-md-2">
+                                        <label class="form-label mb-1">Year</label>
+                                        <select id="savingsSummaryYear" class="form-select form-select-sm">
+                                            <option value="">All</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label mb-1">Team</label>
+                                        <select id="savingsSummaryTeam" class="form-select form-select-sm">
+                                            <option value="">All</option>
+                                            <option value="Entity">Entity</option>
+                                            <option value="GNS">GNS</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label mb-1">Status</label>
+                                        <select id="savingsSummaryStatus" class="form-select form-select-sm">
+                                            <option value="">All</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label mb-1">Planned Deployment</label>
+                                        <div class="row g-1">
+                                            <div class="col-6">
+                                                <input type="date" id="savingsSummaryDateFrom" class="form-control form-control-sm">
+                                            </div>
+                                            <div class="col-6">
+                                                <input type="date" id="savingsSummaryDateTo" class="form-control form-control-sm">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label mb-1">Include Discontinued</label>
+                                        <select id="savingsSummaryDiscontinued" class="form-select form-select-sm">
+                                            <option value="N">No</option>
+                                            <option value="Y">Yes</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label mb-1">Sort Top Projects</label>
+                                        <select id="savingsSummarySort" class="form-select form-select-sm">
+                                            <option value="savings_desc">Highest Savings</option>
+                                            <option value="capacity_desc">Highest Generated Capacity</option>
+                                            <option value="latest_year">Latest Year</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm w-100" id="savingsSummaryClear">Clear Filters</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="savings-kpis">
+                                <div class="savings-kpi">
+                                    <div class="savings-kpi-label">Total Savings</div>
+                                    <div class="savings-kpi-value" id="savingsSummaryTotalSavings">$0.00</div>
+                                    <div class="savings-kpi-sub" id="savingsSummaryProjectCount">0 projects</div>
+                                </div>
+                                <div class="savings-kpi">
+                                    <div class="savings-kpi-label">Generated Capacity</div>
+                                    <div class="savings-kpi-value" id="savingsSummaryTotalCapacity">0.00</div>
+                                    <div class="savings-kpi-sub">Combined active capacity</div>
+                                </div>
+                                <div class="savings-kpi">
+                                    <div class="savings-kpi-label">GNS Savings</div>
+                                    <div class="savings-kpi-value" id="savingsSummaryGnsSavings">$0.00</div>
+                                    <div class="savings-kpi-sub" id="savingsSummaryGnsCapacity">Capacity 0.00</div>
+                                </div>
+                                <div class="savings-kpi">
+                                    <div class="savings-kpi-label">Entity Savings</div>
+                                    <div class="savings-kpi-value" id="savingsSummaryEntitySavings">$0.00</div>
+                                    <div class="savings-kpi-sub" id="savingsSummaryEntityCapacity">Capacity 0.00</div>
+                                </div>
+                            </div>
+                            <div class="savings-chart-grid">
+                                <div class="savings-section-card">
+                                    <div class="savings-section-title">Savings by Year and Team</div>
+                                    <div class="savings-bars" id="savingsSummaryBars"></div>
+                                </div>
+                                <div class="savings-section-card">
+                                    <div class="savings-section-title">Savings Mix</div>
+                                    <div class="savings-donut-wrap">
+                                        <div class="savings-donut" id="savingsSummaryDonut"></div>
+                                        <div class="savings-legend">
+                                            <div class="savings-legend-item">
+                                                <span class="savings-legend-swatch" style="background:#14b8a6;"></span>
+                                                <div>
+                                                    <span class="savings-legend-main">GNS</span>
+                                                    <span class="savings-legend-sub" id="savingsSummaryGnsShare">$0.00 · 0%</span>
+                                                </div>
+                                            </div>
+                                            <div class="savings-legend-item">
+                                                <span class="savings-legend-swatch" style="background:#3b82f6;"></span>
+                                                <div>
+                                                    <span class="savings-legend-main">Entity</span>
+                                                    <span class="savings-legend-sub" id="savingsSummaryEntityShare">$0.00 · 0%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="savings-tables-grid">
+                                <div class="savings-section-card">
+                                    <div class="savings-section-title">Year and Team Summary</div>
+                                    <div class="table-responsive">
+                                        <table class="savings-summary-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Year</th>
+                                                    <th>Team</th>
+                                                    <th class="text-end">Savings</th>
+                                                    <th class="text-end">Generated Capacity</th>
+                                                    <th class="text-end">Projects</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="savingsSummaryTableBody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="savings-section-card">
+                                    <div class="savings-section-title">Top Projects</div>
+                                    <div class="table-responsive">
+                                        <table class="savings-summary-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Project</th>
+                                                    <th>Team</th>
+                                                    <th class="text-end">Savings</th>
+                                                    <th class="text-end">Capacity</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="savingsSummaryTopProjects"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="phase-only-block">
+                        <div class="phase-summary-shell">
+                            <div class="phase-filter-card">
+                                <div class="row g-2 align-items-end">
+                                    <div class="col-md-3">
+                                        <label class="form-label mb-1">Team</label>
+                                        <select id="phaseFilterTeam" class="form-select form-select-sm">
+                                            <option value="">All</option>
+                                            <option value="Entity">Entity</option>
+                                            <option value="GNS">GNS</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label mb-1">Status</label>
+                                        <select id="phaseFilterStatus" class="form-select form-select-sm">
+                                            <option value="">All</option>
+                                            <option value="On Track">On Track</option>
+                                            <option value="Slight Delay">Slight Delay</option>
+                                            <option value="Delay">Delay</option>
+                                            <option value="Completed">Completed</option>
+                                            <option value="Discontinued">Discontinued</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label mb-1">Planned Release From</label>
+                                        <input type="date" id="phaseFilterReleaseFrom" class="form-control form-control-sm">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label mb-1">Planned Release To</label>
+                                        <input type="date" id="phaseFilterReleaseTo" class="form-control form-control-sm">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm w-100" id="phaseClearFilters">Clear Filters</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="phase-section-card">
+                                <div class="phase-summary-header">
+                                    <div>
+                                        <div class="phase-summary-title">Efficiencies Phase</div>
+                                        <div class="phase-summary-subtitle">Project phase tracking based on the main efficiency records.</div>
+                                    </div>
+                                    <div class="phase-text-muted small" id="phaseSummaryCount">0 projects</div>
+                                </div>
+                                <div class="phase-table-wrap">
+                                    <div class="table-responsive">
+                                        <table class="phase-summary-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Project Name</th>
+                                                    <th>Phase</th>
+                                                    <th>Current End Phase</th>
+                                                    <th>Status</th>
+                                                    <th>Planned Release Date</th>
+                                                    <th>Team</th>
+                                                    <th>Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="phaseSummaryBody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive efficiencies-scroll">
+                        <table class="table table-bordered table-hover table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="expand-only-col eff-sticky-year">Year</th>
+                                    <th class="eff-sticky-title">Project Title</th>
+                                    <th>Generated<br>Capacity</th>
+                                    <th>Project Type</th>
+                                    <th>Status</th>
+                                    <th class="expand-only-col eff-description-col eff-group-start">Description</th>
+                                    <th class="expand-only-col">Planned<br>Deployment</th>
+                                    <th class="expand-only-col">Actual<br>Deployment</th>
+                                    <th class="expand-only-col">Savings</th>
+                                    <th class="expand-only-col eff-owner-col eff-group-start">Project Owner</th>
+                                    <th class="expand-only-col">Team</th>
+                                    <th class="expand-only-col">Domestic/<br>REPH</th>
+                                    <th class="expand-only-col">GPTRAC</th>
+                                    <th class="expand-only-col eff-group-start">Developer</th>
+                                    <th class="expand-only-col">PBD</th>
+                                    <th class="expand-only-col">SBD</th>
+                                    <th class="expand-only-col">BU<br>Approved</th>
+                                    <th class="expand-only-col eff-group-start">UAT<br>From</th>
+                                    <th class="expand-only-col">UAT<br>To</th>
+                                    <th class="eff-actions-col">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for row in eff_rows_all %}
+                                <tr class="eff-main-row" data-row-id="{{ row[0] }}" data-baseline-hidden="{{ '1' if row[0] not in filtered_eff_ids else '0' }}" style="{% if row[0] not in filtered_eff_ids %}display:none;{% endif %}" data-eff-title="{{ row[1] if row|length > 1 and row[1] else '' }}" data-eff-description="{{ row[7] if row|length > 7 and row[7] else '' }}" data-eff-year="{{ row[5] if row|length > 5 and row[5] else '' }}" data-eff-planned="{{ row[8] if row|length > 8 and row[8] else '' }}" data-eff-savings="{{ row[9] if row|length > 9 and row[9] else '' }}" data-eff-owner="{{ row[6] if row|length > 6 and row[6] else '' }}" data-eff-team="{{ row[10] if row|length > 10 and row[10] else '' }}" data-eff-remarks="{{ row[14] if row|length > 14 and row[14] else '' }}" data-eff-phase-current-end="{{ row[23] if row|length > 23 and row[23] else '' }}" data-eff-phase-status="{{ row[24] if row|length > 24 and row[24] else '' }}" data-eff-planned-release="{{ row[25] if row|length > 25 and row[25] else '' }}">
+                                    <td class="expand-only-col eff-sticky-year">{{ row[5] if row|length > 5 and row[5] else '-' }}</td>
+                                    <td class="eff-sticky-title">{{ row[1] }}</td>
+                                    <td>{{ row[2] }}</td>
+                                    <td>{{ row[3] }}</td>
+                                    <td>
+                                        {% set eff_status = row[4] %}
+                                        {% if eff_status == 'Initiation' %}
+                                        <span class="badge-eff-initiation">{{ eff_status }}</span>
+                                        {% elif eff_status == 'Development' %}
+                                        <span class="badge-eff-development">{{ eff_status }}</span>
+                                        {% elif eff_status == 'Testing' %}
+                                        <span class="badge-eff-testing">{{ eff_status }}</span>
+                                        {% elif eff_status == 'Implementation' %}
+                                        <span class="badge-eff-implementation">{{ eff_status }}</span>
+                                        {% elif eff_status == 'Post-Implementation' %}
+                                        <span class="badge-eff-post-implementation">{{ eff_status }}</span>
+                                        {% elif eff_status == 'Completed' %}
+                                        <span class="badge-eff-completed">{{ eff_status }}</span>
+                                        {% elif eff_status == 'Discontinued' %}
+                                        <span class="badge-eff-discontinued">{{ eff_status }}</span>
+                                        {% else %}
+                                        <span class="badge-eff-discontinued">{{ eff_status or '-' }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="expand-only-col eff-description-col eff-group-start"><div class="eff-description-text">{{ row[7] if row|length > 7 and row[7] else '-' }}</div></td>
+                                    <td class="expand-only-col">{{ planned_deployment_display(row[8] if row|length > 8 else '') }}</td>
+                                    <td class="expand-only-col">{{ planned_deployment_display(row[22] if row|length > 22 else '') }}</td>
+                                    <td class="expand-only-col">{{ row[9] if row|length > 9 and row[9] else '-' }}</td>
+                                    <td class="expand-only-col eff-owner-col eff-group-start">{{ row[6] if row|length > 6 and row[6] else '-' }}</td>
+                                    <td class="expand-only-col">{{ row[10] if row|length > 10 and row[10] else '-' }}</td>
+                                    <td class="expand-only-col">{{ row[12] if row|length > 12 and row[12] else '-' }}</td>
+                                    <td class="expand-only-col">{{ row[13] if row|length > 13 and row[13] else '-' }}</td>
+                                    <td class="expand-only-col eff-group-start">{{ row[16] if row|length > 16 and row[16] else '-' }}</td>
+                                    <td class="expand-only-col">
+                                        {% set pbd_value = row[17] if row|length > 17 and row[17] else '' %}
+                                        {% if pbd_value == 'Y' %}
+                                        <span class="badge-yes">Y</span>
+                                        {% elif pbd_value == 'N' %}
+                                        <span class="badge-no">N</span>
+                                        {% else %}
+                                        <span class="badge-empty">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="expand-only-col">
+                                        {% set sbd_value = row[18] if row|length > 18 and row[18] else '' %}
+                                        {% if sbd_value == 'Y' %}
+                                        <span class="badge-yes">Y</span>
+                                        {% elif sbd_value == 'N' %}
+                                        <span class="badge-no">N</span>
+                                        {% else %}
+                                        <span class="badge-empty">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="expand-only-col">
+                                        {% set bu_value = row[19] if row|length > 19 and row[19] else '' %}
+                                        {% if bu_value == 'Y' %}
+                                        <span class="badge-yes">Y</span>
+                                        {% elif bu_value == 'N' %}
+                                        <span class="badge-no">N</span>
+                                        {% else %}
+                                        <span class="badge-empty">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="expand-only-col eff-group-start">{{ row[20] if row|length > 20 and row[20] else '-' }}</td>
+                                    <td class="expand-only-col">{{ row[21] if row|length > 21 and row[21] else '-' }}</td>
+                                    <td class="eff-actions-col">
+                                        <a href="#" class="btn btn-sm btn-warning me-1" data-edit-efficiency="{{ url_for('main.edit_efficiency', row_id=row[0]) }}"><i class="bi bi-pencil"></i></a>
+                                        <button type="button" class="btn btn-sm btn-danger" onclick="confirmDeleteEfficiency(this)" data-url="{{ url_for('main.delete_efficiency', row_id=row[0]) }}"><i class="bi bi-trash"></i></button>
+                                        <button type="button" class="btn btn-sm btn-outline-primary ms-1 expand-only-inline eff-remarks-toggle" data-row-id="{{ row[0] }}"><i class="bi bi-chat-text me-1"></i>Remarks</button>
+                                    </td>
+                                </tr>
+                                <tr class="eff-remarks-row" id="effRemarksRow{{ row[0] }}" data-row-id="{{ row[0] }}">
+                                    <td colspan="20">
+                                        <div class="eff-remarks-panel">
+                                            <div class="eff-remarks-grid">
+                                                <div class="eff-remarks-item">
+                                                    <label class="form-label mb-1 eff-remarks-label">Milestone:</label>
+                                                    <textarea class="form-control form-control-sm eff-remarks-input" data-row-id="{{ row[0] }}" data-remarks-part="milestone" placeholder="Milestone"></textarea>
+                                                </div>
+                                                <div class="eff-remarks-item">
+                                                    <label class="form-label mb-1 eff-remarks-label">Challenges:</label>
+                                                    <textarea class="form-control form-control-sm eff-remarks-input" data-row-id="{{ row[0] }}" data-remarks-part="challenges" placeholder="Challenges"></textarea>
+                                                </div>
+                                                <div class="eff-remarks-item">
+                                                    <label class="form-label mb-1 eff-remarks-label">Next Steps:</label>
+                                                    <textarea class="form-control form-control-sm eff-remarks-input" data-row-id="{{ row[0] }}" data-remarks-part="next_steps" placeholder="Next Steps"></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr><td colspan="20" class="text-center text-muted py-3"><i class="bi bi-inbox me-1"></i>No efficiencies yet.</td></tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white"><i class="bi bi-pie-chart me-1"></i>Content Type Summary</div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-bordered content-summary-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Content Type</th>
+                                    <th>FTE Requirement</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for ctype, fte in content_summary %}
+                                <tr>
+                                    <td>{{ ctype }}</td>
+                                    <td>{{ fte }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="efficienciesBackdrop" class="efficiencies-backdrop"></div>
+    <!-- Footer -->
+    <footer class="app-footer">
+        NBTE Inflow-Outflow Dashboard &mdash; &copy; {{ 2026 }} &middot; Internal Use Only
+    </footer>
+    <input type="hidden" id="dashboardCsrfToken" value="{{ csrf_token() }}">
+    <!-- Add SPT Modal -->
+    <div class="modal fade" id="addSptModal" tabindex="-1" aria-labelledby="addSptModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="addSptModalLabel">Add SPT</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body p-0">
+            <iframe src="/add_spt" style="width:100%;height:600px;border:none;"></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Add Efficiency Modal -->
+    <div class="modal fade" id="addEfficiencyModal" tabindex="-1" aria-labelledby="addEfficiencyModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="addEfficiencyModalLabel">Add Efficiency</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body p-0">
+            <iframe src="/add_efficiency" style="width:100%;height:500px;border:none;"></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Settings Modal -->
+    <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="settingsModalLabel">Settings</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body p-0">
+            <iframe src="/settings" style="width:100%;height:600px;border:none;"></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Edit SPT Modal -->
+    <div class="modal fade" id="editSptModal" tabindex="-1" aria-labelledby="editSptModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editSptModalLabel">Edit SPT</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body p-0">
+            <iframe id="editSptFrame" src="" style="width:100%;height:600px;border:none;"></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Edit Efficiency Modal -->
+    <div class="modal fade" id="editEfficiencyModal" tabindex="-1" aria-labelledby="editEfficiencyModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editEfficiencyModalLabel">Edit Efficiency</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body p-0">
+            <iframe id="editEfficiencyFrame" src="" style="width:100%;height:500px;border:none;"></iframe>
+          </div>
+        </div>
+      </div>
+        </div>
+        <div class="modal fade" id="dashboardEmailModal" tabindex="-1" aria-labelledby="dashboardEmailModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="dashboardEmailModalLabel">Choose Report Date Range</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label for="dashboardEmailFromDate" class="form-label fw-semibold">From</label>
+                                <input type="date" id="dashboardEmailFromDate" class="form-control">
+                            </div>
+                            <div class="col-12">
+                                <label for="dashboardEmailToDate" class="form-label fw-semibold">To</label>
+                                <input type="date" id="dashboardEmailToDate" class="form-control">
+                            </div>
+                            <div class="col-12">
+                                <label for="dashboardEmailIncludeEfficiencies" class="form-label fw-semibold">Include Project List</label>
+                                <select id="dashboardEmailIncludeEfficiencies" class="form-select">
+                                    <option value="Y">Yes</option>
+                                    <option value="N">No</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold d-block">Team</label>
+                                <div class="d-flex gap-4 dashboard-email-category-group" id="dashboardEmailCategoryGroup">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="dashboardEmailTeamEntity" value="Entity" checked>
+                                        <label class="form-check-label" for="dashboardEmailTeamEntity">Entity</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="dashboardEmailTeamGns" value="GNS" checked>
+                                        <label class="form-check-label" for="dashboardEmailTeamGns">GNS</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-text mt-3">Select the date range, category, and whether to include efficiencies in the dashboard email report.</div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="generateDashboardEmailBtn"><i class="bi bi-envelope me-1"></i>Generate Email Report</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="efficienciesEmailModal" tabindex="-1" aria-labelledby="efficienciesEmailModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="efficienciesEmailModalLabel">Email Efficiencies Selection</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="emailQuarterControls" class="border rounded p-3 mb-3 bg-light-subtle">
+                            <label class="form-label fw-semibold mb-2">1. Choose Planned Quarter Range</label>
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <label class="form-label mb-1">From Quarter</label>
+                                    <select id="emailQuarterFrom" class="form-select form-select-sm"></select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label mb-1">To Quarter</label>
+                                    <select id="emailQuarterTo" class="form-select form-select-sm"></select>
+                                </div>
+                            </div>
+                            <div class="row g-2 mt-3">
+                                <div class="col-md-6">
+                                    <label class="form-label mb-1">Year</label>
+                                    <select id="emailYearFilter" class="form-select form-select-sm">
+                                        <option value="">All</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label mb-1">Team</label>
+                                    <select id="emailTeamFilter" class="form-select form-select-sm">
+                                        <option value="">All</option>
+                                        <option value="Entity">Entity</option>
+                                        <option value="GNS">GNS</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-text mt-2">Projects in this planned-quarter range and filter selections will appear below for granular selection.</div>
+                        </div>
+
+                        <div id="emailProjectControls" class="border rounded p-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="form-label fw-semibold mb-0">2. Select Projects to Email</label>
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" id="emailSelectAllProjects">Select All</button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" id="emailClearProjects">Clear</button>
+                                </div>
+                            </div>
+                            <div id="emailProjectList" class="email-project-list"></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="generateEffEmailBtn"><i class="bi bi-envelope me-1"></i>Generate Email Report</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+    // Real-time clock and date
+    function updateClock() {
+        const now = new Date();
+        let hours = now.getHours();
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12; // Convert 0 to 12
+        const hoursStr = String(hours).padStart(2, '0');
+        const timeStr = `${hoursStr}:${minutes}:${seconds} ${ampm}`;
+        
+        const dayOptions = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
+        const dateStr = now.toLocaleDateString('en-US', dayOptions);
+        
+        document.getElementById('clockTime').textContent = timeStr;
+        document.getElementById('clockDate').textContent = dateStr;
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const efficienciesCard = document.getElementById('efficienciesCard');
+        const efficienciesExpandBtn = document.getElementById('efficienciesExpandBtn');
+        const savingsSummaryExpandBtn = document.getElementById('savingsSummaryExpandBtn');
+        const phaseSummaryExpandBtn = document.getElementById('phaseSummaryExpandBtn');
+        const efficienciesCloseBtn = document.getElementById('efficienciesCloseBtn');
+        const efficienciesBackdrop = document.getElementById('efficienciesBackdrop');
+        const effFilterYear = document.getElementById('effFilterYear');
+        const effFilterPlannedFrom = document.getElementById('effFilterPlannedFrom');
+        const effFilterPlannedTo = document.getElementById('effFilterPlannedTo');
+        const effFilterTeam = document.getElementById('effFilterTeam');
+        const effFilterStatus = document.getElementById('effFilterStatus');
+        const effClearFilters = document.getElementById('effClearFilters');
+        const effSavingsTotal = document.getElementById('effSavingsTotal');
+        const effGeneratedCapacityTotal = document.getElementById('effGeneratedCapacityTotal');
+        const savingsSummaryYear = document.getElementById('savingsSummaryYear');
+        const savingsSummaryTeam = document.getElementById('savingsSummaryTeam');
+        const savingsSummaryStatus = document.getElementById('savingsSummaryStatus');
+        const savingsSummaryDateFrom = document.getElementById('savingsSummaryDateFrom');
+        const savingsSummaryDateTo = document.getElementById('savingsSummaryDateTo');
+        const savingsSummaryDiscontinued = document.getElementById('savingsSummaryDiscontinued');
+        const savingsSummarySort = document.getElementById('savingsSummarySort');
+        const savingsSummaryClear = document.getElementById('savingsSummaryClear');
+        const savingsSummaryTotalSavings = document.getElementById('savingsSummaryTotalSavings');
+        const savingsSummaryProjectCount = document.getElementById('savingsSummaryProjectCount');
+        const savingsSummaryTotalCapacity = document.getElementById('savingsSummaryTotalCapacity');
+        const savingsSummaryGnsSavings = document.getElementById('savingsSummaryGnsSavings');
+        const savingsSummaryGnsCapacity = document.getElementById('savingsSummaryGnsCapacity');
+        const savingsSummaryEntitySavings = document.getElementById('savingsSummaryEntitySavings');
+        const savingsSummaryEntityCapacity = document.getElementById('savingsSummaryEntityCapacity');
+        const savingsSummaryBars = document.getElementById('savingsSummaryBars');
+        const savingsSummaryDonut = document.getElementById('savingsSummaryDonut');
+        const savingsSummaryGnsShare = document.getElementById('savingsSummaryGnsShare');
+        const savingsSummaryEntityShare = document.getElementById('savingsSummaryEntityShare');
+        const savingsSummaryTableBody = document.getElementById('savingsSummaryTableBody');
+        const savingsSummaryTopProjects = document.getElementById('savingsSummaryTopProjects');
+        const phaseFilterTeam = document.getElementById('phaseFilterTeam');
+        const phaseFilterStatus = document.getElementById('phaseFilterStatus');
+        const phaseFilterReleaseFrom = document.getElementById('phaseFilterReleaseFrom');
+        const phaseFilterReleaseTo = document.getElementById('phaseFilterReleaseTo');
+        const phaseClearFilters = document.getElementById('phaseClearFilters');
+        const phaseSummaryCount = document.getElementById('phaseSummaryCount');
+        const phaseSummaryBody = document.getElementById('phaseSummaryBody');
+        const emailEfficienciesBtn = document.getElementById('emailEfficienciesBtn');
+        const efficienciesEmailModalEl = document.getElementById('efficienciesEmailModal');
+        const emailQuarterFrom = document.getElementById('emailQuarterFrom');
+        const emailQuarterTo = document.getElementById('emailQuarterTo');
+        const emailYearFilter = document.getElementById('emailYearFilter');
+        const emailTeamFilter = document.getElementById('emailTeamFilter');
+        const emailProjectList = document.getElementById('emailProjectList');
+        const emailSelectAllProjects = document.getElementById('emailSelectAllProjects');
+        const emailClearProjects = document.getElementById('emailClearProjects');
+        const generateEffEmailBtn = document.getElementById('generateEffEmailBtn');
+        const effRows = Array.from(document.querySelectorAll('#efficienciesCard tbody tr.eff-main-row'));
+        const baselineVisibility = new Map(effRows.map(row => [row.getAttribute('data-row-id'), row.style.display === 'none' ? 'none' : '']));
+        let expandedAllOverride = false;
+        let efficienciesMode = 'details';
+        const remarksInputs = Array.from(document.querySelectorAll('.eff-remarks-input'));
+        const remarksToggleButtons = Array.from(document.querySelectorAll('.eff-remarks-toggle'));
+        let efficienciesEmailModal = null;
+
+        function restoreEffRowsToBaseline() {
+            effRows.forEach(row => {
+                const rowId = row.getAttribute('data-row-id');
+                row.style.display = baselineVisibility.get(rowId) || '';
+
+                const detailsRow = document.getElementById('effRemarksRow' + rowId);
+                if (detailsRow && row.style.display === 'none') {
+                    detailsRow.style.display = 'none';
+                }
+            });
+            updateEffSavingsTotal();
+            updateEffGeneratedCapacityTotal();
+        }
+
+        function parseQuarterFromText(text, fallbackYear) {
+            const raw = (text || '').trim();
+            if (!raw) return '';
+
+            const qMatch = raw.match(/q\s*([1-4])/i);
+            let quarter = qMatch ? parseInt(qMatch[1], 10) : null;
+
+            const yearMatch = raw.match(/(20\d{2})/);
+            let year = yearMatch ? parseInt(yearMatch[1], 10) : null;
+
+            const monthNumMatch = raw.match(/(?:^|\D)(0?[1-9]|1[0-2])(?:\D|$)/);
+            const monthNameMap = {
+                jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6,
+                jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12
+            };
+            let month = null;
+            if (monthNumMatch) {
+                month = parseInt(monthNumMatch[1], 10);
+            } else {
+                const monthNameMatch = raw.toLowerCase().match(/jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec/);
+                if (monthNameMatch) {
+                    month = monthNameMap[monthNameMatch[0]];
+                }
+            }
+
+            if (!quarter && month) {
+                quarter = Math.ceil(month / 3);
+            }
+
+            if (!year && fallbackYear) {
+                const parsedFallbackYear = parseInt(fallbackYear, 10);
+                if (!Number.isNaN(parsedFallbackYear)) year = parsedFallbackYear;
+            }
+
+            if (!year || !quarter) return '';
+            return `${year}-Q${quarter}`;
+        }
+
+        function quarterKeyToIndex(quarterKey) {
+            const m = (quarterKey || '').match(/^(\d{4})-Q([1-4])$/);
+            if (!m) return Number.NaN;
+            return (parseInt(m[1], 10) * 4) + parseInt(m[2], 10);
+        }
+
+        function getQuarterDisplayLabel(quarterKey) {
+            const m = (quarterKey || '').match(/^(\d{4})-Q([1-4])$/);
+            if (!m) return quarterKey;
+            return `Q${m[2]} ${m[1]}`;
+        }
+
+        function getRowQuarterKey(row) {
+            const planned = row.dataset.effPlanned || '';
+            const rowYear = row.dataset.effYear || '';
+            return parseQuarterFromText(planned, rowYear);
+        }
+
+        function getRowProjectTitle(row) {
+            const title = (row.dataset.effTitle || '').trim();
+            if (title) return title;
+            const titleCell = row.querySelector('td:nth-child(2)');
+            return titleCell ? titleCell.textContent.trim() : '';
+        }
+
+        function getRowProjectDescription(row) {
+            const description = (row.dataset.effDescription || '').trim();
+            return description || '-';
+        }
+
+        function getRowPlannedQuarterLabel(row) {
+            const quarterKey = getRowQuarterKey(row);
+            if (quarterKey) return getQuarterDisplayLabel(quarterKey);
+
+            const plannedRaw = (row.dataset.effPlanned || '').trim();
+            return plannedRaw || 'Not specified';
+        }
+
+        function getQuarterRangeBounds() {
+            const fromQuarter = emailQuarterFrom ? emailQuarterFrom.value : '';
+            const toQuarter = emailQuarterTo ? emailQuarterTo.value : '';
+            const fromIdx = quarterKeyToIndex(fromQuarter);
+            const toIdx = quarterKeyToIndex(toQuarter);
+
+            if (Number.isNaN(fromIdx) || Number.isNaN(toIdx)) {
+                return null;
+            }
+            return {
+                minIdx: Math.min(fromIdx, toIdx),
+                maxIdx: Math.max(fromIdx, toIdx)
+            };
+        }
+
+        function getRowsInQuarterRange() {
+            const bounds = getQuarterRangeBounds();
+            if (!bounds) return [];
+
+            return effRows.filter(row => {
+                const rowQuarter = getRowQuarterKey(row);
+                const rowIdx = quarterKeyToIndex(rowQuarter);
+                return !Number.isNaN(rowIdx) && rowIdx >= bounds.minIdx && rowIdx <= bounds.maxIdx;
+            });
+        }
+
+        function refreshProjectChecklistForQuarterRange() {
+            if (!emailProjectList) return;
+
+            emailProjectList.innerHTML = '';
+            const rowsInRange = getRowsInQuarterRange();
+            const selectedYear = emailYearFilter ? emailYearFilter.value : '';
+            const selectedTeam = emailTeamFilter ? emailTeamFilter.value : '';
+            const filteredRows = rowsInRange.filter(row => {
+                const rowYear = (row.dataset.effYear || '').trim();
+                const rowTeam = (row.dataset.effTeam || '').trim();
+                const yearMatch = !selectedYear || rowYear === selectedYear;
+                const teamMatch = !selectedTeam || rowTeam === selectedTeam;
+                return yearMatch && teamMatch;
+            });
+
+            if (!filteredRows.length) {
+                const empty = document.createElement('div');
+                empty.className = 'text-muted small';
+                empty.textContent = 'No projects found for the selected range and filters.';
+                emailProjectList.appendChild(empty);
+                return;
+            }
+
+            rowsInRange.forEach((row, idx) => {
+                const projectTitle = getRowProjectTitle(row) || `Project ${idx + 1}`;
+                const rowId = row.getAttribute('data-row-id') || String(idx + 1);
+                const plannedQuarterLabel = getRowPlannedQuarterLabel(row);
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'form-check';
+
+                const checkbox = document.createElement('input');
+                checkbox.className = 'form-check-input email-project-checkbox';
+                checkbox.type = 'checkbox';
+                checkbox.id = `emailProject${rowId}`;
+                checkbox.value = rowId;
+                checkbox.checked = true;
+
+                const label = document.createElement('label');
+                label.className = 'form-check-label';
+                label.setAttribute('for', `emailProject${rowId}`);
+                label.textContent = `${projectTitle} (Planned Quarter: ${plannedQuarterLabel})`;
+
+                wrapper.appendChild(checkbox);
+                wrapper.appendChild(label);
+                emailProjectList.appendChild(wrapper);
+            });
+        }
+
+        function buildEffEmailSelectionOptions() {
+            if (!emailQuarterFrom || !emailQuarterTo || !emailProjectList) return;
+
+            const quarterSet = new Set();
+            const yearSet = new Set();
+            const teamSet = new Set();
+            effRows.forEach((row) => {
+                const qKey = getRowQuarterKey(row);
+                if (qKey) quarterSet.add(qKey);
+                const rowYear = (row.dataset.effYear || '').trim();
+                if (rowYear) yearSet.add(rowYear);
+                const rowTeam = (row.dataset.effTeam || '').trim();
+                if (rowTeam) teamSet.add(rowTeam);
+            });
+
+            const quarterKeys = Array.from(quarterSet).sort((a, b) => quarterKeyToIndex(a) - quarterKeyToIndex(b));
+            emailQuarterFrom.innerHTML = '';
+            emailQuarterTo.innerHTML = '';
+
+            quarterKeys.forEach(qKey => {
+                const fromOpt = document.createElement('option');
+                fromOpt.value = qKey;
+                fromOpt.textContent = getQuarterDisplayLabel(qKey);
+                emailQuarterFrom.appendChild(fromOpt);
+
+                const toOpt = document.createElement('option');
+                toOpt.value = qKey;
+                toOpt.textContent = getQuarterDisplayLabel(qKey);
+                emailQuarterTo.appendChild(toOpt);
+            });
+
+            if (quarterKeys.length > 0) {
+                emailQuarterFrom.value = quarterKeys[0];
+                emailQuarterTo.value = quarterKeys[quarterKeys.length - 1];
+            }
+
+            if (emailYearFilter) {
+                const yearOptions = Array.from(yearSet).sort();
+                emailYearFilter.innerHTML = '<option value="">All</option>' + yearOptions.map(y => `<option value="${y}">${y}</option>`).join('');
+            }
+
+            if (emailTeamFilter) {
+                const teamOptions = Array.from(teamSet).sort();
+                const baseOptions = ['<option value="">All</option>', '<option value="Entity">Entity</option>', '<option value="GNS">GNS</option>'];
+                const extraOptions = teamOptions.filter(t => t && t !== 'Entity' && t !== 'GNS').map(t => `<option value="${t}">${t}</option>`);
+                emailTeamFilter.innerHTML = baseOptions.concat(extraOptions).join('');
+            }
+
+            refreshProjectChecklistForQuarterRange();
+        }
+
+        function getEffStatusText(row) {
+            return (row.children[4] ? row.children[4].textContent : '').trim();
+        }
+
+        function getEffTeamText(row) {
+            return (row.dataset.effTeam || '').trim() || (row.children[10] ? row.children[10].textContent : '').trim();
+        }
+
+        function getEffGeneratedCapacity(row) {
+            return parseGeneratedCapacity(row.querySelector('td:nth-child(3)')?.textContent || row.dataset.effGeneratedCapacity || '');
+        }
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                maximumFractionDigits: 0
+            }).format(value || 0);
+        }
+
+        function formatNumber(value) {
+            return new Intl.NumberFormat('en-US', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 2
+            }).format(value || 0);
+        }
+
+        function escapeHtml(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function normalizeTeamLabel(value) {
+            const raw = (value || '').trim();
+            if (!raw) return 'Other';
+            if (raw.toUpperCase() === 'GNS') return 'GNS';
+            if (raw.toUpperCase() === 'ENTITY' || raw.toUpperCase() === 'NBTE') return 'Entity';
+            return raw;
+        }
+
+        function normalizeSummaryDate(value) {
+            const raw = (value || '').trim();
+            if (!raw) return '';
+
+            const isoMatch = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+            if (isoMatch) return isoMatch[0];
+
+            const slashMatch = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+            if (slashMatch) {
+                let year = slashMatch[3];
+                if (year.length === 2) year = `20${year}`;
+                const month = slashMatch[1].padStart(2, '0');
+                const day = slashMatch[2].padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+
+            return '';
+        }
+
+        function getSavingsSummaryPlannedDate(row) {
+            return normalizeSummaryDate(row.dataset.effPlanned || '');
+        }
+
+        function getPhaseStatusValue(row) {
+            return (row.dataset.effPhaseStatus || '').trim() || 'On Track';
+        }
+
+        function getPhaseCurrentEndValue(row) {
+            return (row.dataset.effPhaseCurrentEnd || '').trim();
+        }
+
+        function getPhasePlannedReleaseDate(row) {
+            return normalizeSummaryDate(row.dataset.effPlannedRelease || '');
+        }
+
+        function formatShortDate(value) {
+            const normalized = normalizeSummaryDate(value);
+            if (!normalized) return '-';
+            const parts = normalized.split('-');
+            return `${parseInt(parts[1], 10)}/${parseInt(parts[2], 10)}/${parts[0].slice(2)}`;
+        }
+
+        function phaseStatusClassName(value) {
+            const normalized = (value || '').toLowerCase();
+            if (normalized === 'on track') return 'phase-track';
+            if (normalized === 'slight delay') return 'phase-slight-delay';
+            if (normalized === 'delay') return 'phase-delay';
+            if (normalized === 'completed') return 'phase-completed';
+            if (normalized === 'discontinued') return 'phase-discontinued';
+            return 'phase-track';
+        }
+
+        function renderEfficienciesPhase() {
+            if (!phaseSummaryBody) return;
+
+            const selectedTeam = phaseFilterTeam ? phaseFilterTeam.value : '';
+            const selectedStatus = phaseFilterStatus ? phaseFilterStatus.value : '';
+            const selectedFrom = phaseFilterReleaseFrom ? phaseFilterReleaseFrom.value : '';
+            const selectedTo = phaseFilterReleaseTo ? phaseFilterReleaseTo.value : '';
+
+            const rows = effRows.filter(row => {
+                const team = normalizeTeamLabel(getEffTeamText(row));
+                const phaseStatus = getPhaseStatusValue(row);
+                const plannedRelease = getPhasePlannedReleaseDate(row);
+                if (selectedTeam && team !== selectedTeam) return false;
+                if (selectedStatus && phaseStatus !== selectedStatus) return false;
+                if (selectedFrom && (!plannedRelease || plannedRelease < selectedFrom)) return false;
+                if (selectedTo && (!plannedRelease || plannedRelease > selectedTo)) return false;
+                return true;
+            }).sort((a, b) => {
+                const aDate = getPhasePlannedReleaseDate(a);
+                const bDate = getPhasePlannedReleaseDate(b);
+                if (aDate && bDate && aDate !== bDate) return aDate.localeCompare(bDate);
+                if (aDate && !bDate) return -1;
+                if (!aDate && bDate) return 1;
+                return getRowProjectTitle(a).localeCompare(getRowProjectTitle(b));
+            });
+
+            if (phaseSummaryCount) {
+                phaseSummaryCount.textContent = `${rows.length} project${rows.length === 1 ? '' : 's'}`;
+            }
+
+            phaseSummaryBody.innerHTML = rows.length ? rows.map(row => {
+                const rowId = row.getAttribute('data-row-id');
+                const projectName = getRowProjectTitle(row) || '-';
+                const phase = getEffStatusText(row) || '-';
+                const currentEnd = getPhaseCurrentEndValue(row);
+                const phaseStatus = getPhaseStatusValue(row);
+                const plannedRelease = getPhasePlannedReleaseDate(row);
+                const team = normalizeTeamLabel(getEffTeamText(row));
+                const editHref = `{{ url_for('main.edit_efficiency', row_id=0) }}`.replace(/0$/, rowId) + '?standalone=1&eff_view=phase';
+
+                return `
+                    <tr>
+                        <td>
+                            <span class="phase-project-name">${escapeHtml(projectName)}</span>
+                            <span class="phase-name-sub">Tracks the project lifecycle from the main efficiency status.</span>
+                        </td>
+                        <td>${escapeHtml(phase)}</td>
+                        <td>${currentEnd ? escapeHtml(formatShortDate(currentEnd)) : '<span class="phase-text-muted">Not set</span>'}</td>
+                        <td><span class="phase-chip ${phaseStatusClassName(phaseStatus)}">${escapeHtml(phaseStatus)}</span></td>
+                        <td>${plannedRelease ? escapeHtml(formatShortDate(plannedRelease)) : '<span class="phase-text-muted">Not set</span>'}</td>
+                        <td><span class="team-pill ${team === 'GNS' ? 'gns' : 'entity'}">${escapeHtml(team)}</span></td>
+                        <td><a href="${editHref}" class="btn btn-sm btn-outline-primary phase-action-link"><i class="bi bi-pencil me-1"></i>Edit</a></td>
+                    </tr>
+                `;
+            }).join('') : '<tr><td colspan="7" class="text-center phase-text-muted py-4">No projects match the selected phase filters.</td></tr>';
+        }
+
+        function populateSavingsSummaryFilters() {
+            if (!savingsSummaryYear || !savingsSummaryTeam || !savingsSummaryStatus) return;
+
+            const years = new Set();
+            const teams = new Set();
+            const statuses = new Set();
+
+            effRows.forEach(row => {
+                const year = (row.dataset.effYear || '').trim();
+                const team = normalizeTeamLabel(getEffTeamText(row));
+                const status = getEffStatusText(row);
+                if (year) years.add(year);
+                if (team) teams.add(team);
+                if (status) statuses.add(status);
+            });
+
+            savingsSummaryYear.innerHTML = '<option value="">All</option>' +
+                Array.from(years).sort().map(year => `<option value="${year}">${year}</option>`).join('');
+
+            const sortedTeams = Array.from(teams).sort((a, b) => {
+                const order = { GNS: 0, Entity: 1 };
+                return (order[a] ?? 99) - (order[b] ?? 99) || a.localeCompare(b);
+            });
+            savingsSummaryTeam.innerHTML = '<option value="">All</option>' +
+                sortedTeams.map(team => `<option value="${team}">${team}</option>`).join('');
+
+            savingsSummaryStatus.innerHTML = '<option value="">All</option>' +
+                Array.from(statuses).sort().map(status => `<option value="${status}">${status}</option>`).join('');
+        }
+
+        function getSavingsSummaryRows() {
+            const selectedYear = savingsSummaryYear ? savingsSummaryYear.value : '';
+            const selectedTeam = savingsSummaryTeam ? savingsSummaryTeam.value : '';
+            const selectedStatus = savingsSummaryStatus ? savingsSummaryStatus.value : '';
+            const selectedDateFrom = savingsSummaryDateFrom ? savingsSummaryDateFrom.value : '';
+            const selectedDateTo = savingsSummaryDateTo ? savingsSummaryDateTo.value : '';
+            const includeDiscontinued = (savingsSummaryDiscontinued ? savingsSummaryDiscontinued.value : 'N') === 'Y';
+            const selectedSort = savingsSummarySort ? savingsSummarySort.value : 'savings_desc';
+
+            const filteredRows = effRows.filter(row => {
+                const rowYear = (row.dataset.effYear || '').trim();
+                const rowTeam = normalizeTeamLabel(getEffTeamText(row));
+                const rowStatus = getEffStatusText(row);
+                const rowPlannedDate = getSavingsSummaryPlannedDate(row);
+                if (selectedYear && rowYear !== selectedYear) return false;
+                if (selectedTeam && rowTeam !== selectedTeam) return false;
+                if (selectedStatus && rowStatus !== selectedStatus) return false;
+                if (selectedDateFrom && (!rowPlannedDate || rowPlannedDate < selectedDateFrom)) return false;
+                if (selectedDateTo && (!rowPlannedDate || rowPlannedDate > selectedDateTo)) return false;
+                if (!includeDiscontinued && rowStatus === 'Discontinued') return false;
+                return true;
+            });
+
+            const sorters = {
+                savings_desc: (a, b) => parseSavings(b.dataset.effSavings || '') - parseSavings(a.dataset.effSavings || ''),
+                capacity_desc: (a, b) => getEffGeneratedCapacity(b) - getEffGeneratedCapacity(a),
+                latest_year: (a, b) => {
+                    const yearDiff = parseInt(b.dataset.effYear || '0', 10) - parseInt(a.dataset.effYear || '0', 10);
+                    return yearDiff || getRowProjectTitle(a).localeCompare(getRowProjectTitle(b));
+                }
+            };
+
+            return filteredRows.slice().sort(sorters[selectedSort] || sorters.savings_desc);
+        }
+
+        function renderSavingsSummary() {
+            if (!savingsSummaryBars || !savingsSummaryTableBody || !savingsSummaryTopProjects) return;
+
+            const rows = getSavingsSummaryRows();
+            const totals = {
+                savings: 0,
+                capacity: 0,
+                projectCount: rows.length,
+                GNS: { savings: 0, capacity: 0 },
+                Entity: { savings: 0, capacity: 0 }
+            };
+            const byYear = new Map();
+            const byYearTeam = new Map();
+
+            rows.forEach(row => {
+                const year = (row.dataset.effYear || '').trim() || 'Unknown';
+                const team = normalizeTeamLabel(getEffTeamText(row));
+                const status = getEffStatusText(row) || '-';
+                const savings = parseSavings(row.dataset.effSavings || '');
+                const capacity = getEffGeneratedCapacity(row);
+
+                totals.savings += savings;
+                totals.capacity += capacity;
+                if (totals[team]) {
+                    totals[team].savings += savings;
+                    totals[team].capacity += capacity;
+                }
+
+                const yearEntry = byYear.get(year) || {
+                    year,
+                    GNS: { savings: 0, capacity: 0 },
+                    Entity: { savings: 0, capacity: 0 }
+                };
+                if (!yearEntry[team]) {
+                    yearEntry[team] = { savings: 0, capacity: 0 };
+                }
+                yearEntry[team].savings += savings;
+                yearEntry[team].capacity += capacity;
+                byYear.set(year, yearEntry);
+
+                const groupedKey = `${year}__${team}`;
+                const groupedEntry = byYearTeam.get(groupedKey) || {
+                    year,
+                    team,
+                    savings: 0,
+                    capacity: 0,
+                    projectCount: 0,
+                    statuses: new Set()
+                };
+                groupedEntry.savings += savings;
+                groupedEntry.capacity += capacity;
+                groupedEntry.projectCount += 1;
+                groupedEntry.statuses.add(status);
+                byYearTeam.set(groupedKey, groupedEntry);
+            });
+
+            if (savingsSummaryTotalSavings) savingsSummaryTotalSavings.textContent = formatCurrency(totals.savings);
+            if (savingsSummaryProjectCount) savingsSummaryProjectCount.textContent = String(totals.projectCount);
+            if (savingsSummaryTotalCapacity) savingsSummaryTotalCapacity.textContent = formatNumber(totals.capacity);
+            if (savingsSummaryGnsSavings) savingsSummaryGnsSavings.textContent = formatCurrency(totals.GNS.savings);
+            if (savingsSummaryGnsCapacity) savingsSummaryGnsCapacity.textContent = formatNumber(totals.GNS.capacity);
+            if (savingsSummaryEntitySavings) savingsSummaryEntitySavings.textContent = formatCurrency(totals.Entity.savings);
+            if (savingsSummaryEntityCapacity) savingsSummaryEntityCapacity.textContent = formatNumber(totals.Entity.capacity);
+
+            const yearEntries = Array.from(byYear.values()).sort((a, b) => parseInt(a.year, 10) - parseInt(b.year, 10));
+            const maxYearSavings = Math.max(1, ...yearEntries.map(entry => (entry.GNS?.savings || 0) + (entry.Entity?.savings || 0)));
+            savingsSummaryBars.innerHTML = '';
+            if (!yearEntries.length) {
+                savingsSummaryBars.innerHTML = '<div class="text-muted small">No savings summary data matches the selected filters.</div>';
+            } else {
+                yearEntries.forEach(entry => {
+                    const gnsSavings = entry.GNS?.savings || 0;
+                    const entitySavings = entry.Entity?.savings || 0;
+                    const totalYearSavings = gnsSavings + entitySavings;
+                    const totalYearCapacity = (entry.GNS?.capacity || 0) + (entry.Entity?.capacity || 0);
+                    const gnsWidth = totalYearSavings ? (gnsSavings / maxYearSavings) * 100 : 0;
+                    const entityWidth = totalYearSavings ? (entitySavings / maxYearSavings) * 100 : 0;
+
+                    const rowEl = document.createElement('div');
+                    rowEl.className = 'savings-bar-row';
+                    rowEl.innerHTML = `
+                        <div class="savings-bar-meta">
+                            <div class="savings-bar-year">${escapeHtml(entry.year)}</div>
+                            <div class="savings-bar-values">${formatCurrency(totalYearSavings)} | ${formatNumber(totalYearCapacity)} cap</div>
+                        </div>
+                        <div class="savings-bar-track">
+                            <div class="savings-bar-gns" style="width:${gnsWidth}%;"></div>
+                            <div class="savings-bar-entity" style="width:${entityWidth}%;"></div>
+                        </div>
+                    `;
+                    savingsSummaryBars.appendChild(rowEl);
+                });
+            }
+
+            const totalSavingsForShare = totals.savings || 1;
+            const gnsShare = Math.round((totals.GNS.savings / totalSavingsForShare) * 100);
+            const entityShare = Math.round((totals.Entity.savings / totalSavingsForShare) * 100);
+            if (savingsSummaryDonut) {
+                savingsSummaryDonut.style.background = rows.length
+                    ? `conic-gradient(#0d6efd 0 ${gnsShare}%, #198754 ${gnsShare}% 100%)`
+                    : 'conic-gradient(#dbe4ec 0 100%)';
+                savingsSummaryDonut.innerHTML = `<span>${rows.length ? `${gnsShare}% / ${entityShare}%` : '0%'}</span>`;
+            }
+            if (savingsSummaryGnsShare) savingsSummaryGnsShare.textContent = `${gnsShare}% of savings`;
+            if (savingsSummaryEntityShare) savingsSummaryEntityShare.textContent = `${entityShare}% of savings`;
+
+            const groupedRows = Array.from(byYearTeam.values()).sort((a, b) => {
+                const yearDiff = parseInt(b.year, 10) - parseInt(a.year, 10);
+                if (yearDiff) return yearDiff;
+                if (a.team === b.team) return 0;
+                return a.team === 'GNS' ? -1 : 1;
+            });
+            savingsSummaryTableBody.innerHTML = groupedRows.length
+                ? groupedRows.map(entry => `
+                    <tr>
+                        <td>${escapeHtml(entry.year)}</td>
+                        <td><span class="team-pill ${entry.team === 'GNS' ? 'gns' : 'entity'}">${escapeHtml(entry.team)}</span></td>
+                        <td>${formatCurrency(entry.savings)}</td>
+                        <td>${formatNumber(entry.capacity)}</td>
+                        <td>${entry.projectCount}</td>
+                    </tr>
+                `).join('')
+                : '<tr><td colspan="5" class="text-center text-muted py-3">No rows match the selected filters.</td></tr>';
+
+            savingsSummaryTopProjects.innerHTML = rows.length
+                ? rows.slice(0, 6).map(row => {
+                    const title = getRowProjectTitle(row) || '-';
+                    const team = normalizeTeamLabel(getEffTeamText(row));
+                    const status = getEffStatusText(row) || '-';
+                    const savings = parseSavings(row.dataset.effSavings || '');
+                    const capacity = getEffGeneratedCapacity(row);
+                    return `
+                        <tr>
+                            <td>${escapeHtml(title)}</td>
+                            <td><span class="team-pill ${team === 'GNS' ? 'gns' : 'entity'}">${escapeHtml(team)}</span></td>
+                            <td><span class="eff-status-badge ${status.toLowerCase().replace(/[^a-z]+/g, '-')}">${escapeHtml(status)}</span></td>
+                            <td>${formatCurrency(savings)}</td>
+                            <td>${formatNumber(capacity)}</td>
+                        </tr>
+                    `;
+                }).join('')
+                : '<tr><td colspan="5" class="text-center text-muted py-3">No projects available for this view.</td></tr>';
+        }
+
+        function setEfficienciesExpanded(expanded) {
+            if (!efficienciesCard || !efficienciesExpandBtn || !efficienciesBackdrop) return;
+
+            const fromRect = efficienciesCard.getBoundingClientRect();
+            efficienciesCard.classList.toggle('expanded', expanded);
+            efficienciesCard.classList.toggle('summary-mode', expanded && efficienciesMode === 'summary');
+            efficienciesCard.classList.toggle('phase-mode', expanded && efficienciesMode === 'phase');
+            efficienciesBackdrop.classList.toggle('show', expanded);
+            document.body.classList.toggle('no-scroll', expanded);
+            efficienciesExpandBtn.innerHTML = '<i class="bi bi-arrows-fullscreen me-1"></i>Efficiencies';
+            efficienciesExpandBtn.title = expanded ? 'Show detailed efficiencies' : 'Expand detailed efficiencies';
+            efficienciesExpandBtn.classList.toggle('active', expanded && efficienciesMode === 'details');
+            efficienciesExpandBtn.setAttribute('aria-selected', expanded && efficienciesMode === 'details' ? 'true' : 'false');
+            if (savingsSummaryExpandBtn) {
+                savingsSummaryExpandBtn.innerHTML = '<i class="bi bi-graph-up-arrow me-1"></i>Savings Summary';
+                savingsSummaryExpandBtn.title = expanded ? 'Show savings summary' : 'Expand savings summary';
+                savingsSummaryExpandBtn.classList.toggle('active', expanded && efficienciesMode === 'summary');
+                savingsSummaryExpandBtn.setAttribute('aria-selected', expanded && efficienciesMode === 'summary' ? 'true' : 'false');
+            }
+            if (phaseSummaryExpandBtn) {
+                phaseSummaryExpandBtn.innerHTML = '<i class="bi bi-diagram-3 me-1"></i>Efficiencies Phase';
+                phaseSummaryExpandBtn.title = expanded ? 'Show efficiencies phase' : 'Expand efficiencies phase';
+                phaseSummaryExpandBtn.classList.toggle('active', expanded && efficienciesMode === 'phase');
+                phaseSummaryExpandBtn.setAttribute('aria-selected', expanded && efficienciesMode === 'phase' ? 'true' : 'false');
+            }
+            if (efficienciesCloseBtn) {
+                efficienciesCloseBtn.style.display = expanded ? 'inline-flex' : 'none';
+            }
+            const toRect = efficienciesCard.getBoundingClientRect();
+            const deltaX = fromRect.left - toRect.left;
+            const deltaY = fromRect.top - toRect.top;
+            const scaleX = fromRect.width / toRect.width;
+            const scaleY = fromRect.height / toRect.height;
+
+            if (Math.abs(deltaX) > 0.5 || Math.abs(deltaY) > 0.5 || Math.abs(scaleX - 1) > 0.01 || Math.abs(scaleY - 1) > 0.01) {
+                efficienciesCard.animate([
+                    {
+                        transform: `translate(${deltaX}px, ${deltaY}px) scale(${scaleX}, ${scaleY})`,
+                        transformOrigin: 'top left',
+                        opacity: 0.98
+                    },
+                    {
+                        transform: 'translate(0, 0) scale(1, 1)',
+                        transformOrigin: 'top left',
+                        opacity: 1
+                    }
+                ], {
+                    duration: 230,
+                    easing: 'cubic-bezier(0.22, 1, 0.36, 1)'
+                });
+            }
+
+            if (!expanded && expandedAllOverride) {
+                expandedAllOverride = false;
+                restoreEffRowsToBaseline();
+            }
+
+            const url = new URL(window.location.href);
+            if (expanded) {
+                url.searchParams.set('eff_expanded', '1');
+                url.searchParams.set('eff_view', efficienciesMode);
+            } else {
+                url.searchParams.delete('eff_expanded');
+                url.searchParams.delete('eff_view');
+            }
+            window.history.replaceState({}, '', url.toString());
+        }
+
+        if (efficienciesExpandBtn) {
+            efficienciesExpandBtn.addEventListener('click', function() {
+                efficienciesMode = 'details';
+                setEfficienciesExpanded(true);
+            });
+        }
+
+        if (savingsSummaryExpandBtn) {
+            savingsSummaryExpandBtn.addEventListener('click', function() {
+                efficienciesMode = 'summary';
+                renderSavingsSummary();
+                setEfficienciesExpanded(true);
+            });
+        }
+
+        if (phaseSummaryExpandBtn) {
+            phaseSummaryExpandBtn.addEventListener('click', function() {
+                efficienciesMode = 'phase';
+                renderEfficienciesPhase();
+                setEfficienciesExpanded(true);
+            });
+        }
+
+        if (efficienciesCloseBtn) {
+            efficienciesCloseBtn.addEventListener('click', function() {
+                setEfficienciesExpanded(false);
+            });
+        }
+
+        if (efficienciesBackdrop) {
+            efficienciesBackdrop.addEventListener('click', function() {
+                setEfficienciesExpanded(false);
+            });
+        }
+
+        function populateEffFilterOptions() {
+            if (!effFilterYear || !effFilterPlannedFrom || !effFilterPlannedTo || !effFilterStatus) return;
+
+            const years = new Set();
+            const planneds = new Set();
+            const statuses = new Set();
+            effRows.forEach(row => {
+                const y = (row.dataset.effYear || '').trim();
+                const p = (row.dataset.effPlanned || '').trim();
+                const s = (row.children[4] ? row.children[4].textContent : '').trim();
+                if (y) years.add(y);
+                if (p) planneds.add(p);
+                if (s) statuses.add(s);
+            });
+
+            Array.from(years).sort().forEach(y => {
+                const opt = document.createElement('option');
+                opt.value = y;
+                opt.textContent = y;
+                effFilterYear.appendChild(opt);
+            });
+
+            Array.from(planneds).sort().forEach(p => {
+                const fromOpt = document.createElement('option');
+                fromOpt.value = p;
+                fromOpt.textContent = p;
+                effFilterPlannedFrom.appendChild(fromOpt);
+
+                const toOpt = document.createElement('option');
+                toOpt.value = p;
+                toOpt.textContent = p;
+                effFilterPlannedTo.appendChild(toOpt);
+            });
+
+            Array.from(statuses).sort().forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s;
+                opt.textContent = s;
+                effFilterStatus.appendChild(opt);
+            });
+        }
+
+        function applyEffFilters() {
+            const selectedYear = effFilterYear ? effFilterYear.value : '';
+            const selectedPlannedFrom = effFilterPlannedFrom ? effFilterPlannedFrom.value : '';
+            const selectedPlannedTo = effFilterPlannedTo ? effFilterPlannedTo.value : '';
+            const selectedTeam = effFilterTeam ? effFilterTeam.value : '';
+            const selectedStatus = effFilterStatus ? effFilterStatus.value : '';
+            const fromQuarterIdx = selectedPlannedFrom ? quarterKeyToIndex(selectedPlannedFrom) : Number.NaN;
+            const toQuarterIdx = selectedPlannedTo ? quarterKeyToIndex(selectedPlannedTo) : Number.NaN;
+            const minQuarterIdx = !Number.isNaN(fromQuarterIdx) && !Number.isNaN(toQuarterIdx)
+                ? Math.min(fromQuarterIdx, toQuarterIdx)
+                : fromQuarterIdx;
+            const maxQuarterIdx = !Number.isNaN(fromQuarterIdx) && !Number.isNaN(toQuarterIdx)
+                ? Math.max(fromQuarterIdx, toQuarterIdx)
+                : toQuarterIdx;
+
+            effRows.forEach(row => {
+                const rowYear = (row.dataset.effYear || '').trim();
+                const rowPlanned = (row.dataset.effPlanned || '').trim();
+                const rowTeam = (row.dataset.effTeam || '').trim();
+                const rowStatus = (row.children[4] ? row.children[4].textContent : '').trim();
+                const rowQuarterIdx = quarterKeyToIndex(parseQuarterFromText(rowPlanned, rowYear));
+                const yearMatch = !selectedYear || rowYear === selectedYear;
+                const plannedFromMatch = Number.isNaN(minQuarterIdx) || (!Number.isNaN(rowQuarterIdx) && rowQuarterIdx >= minQuarterIdx);
+                const plannedToMatch = Number.isNaN(maxQuarterIdx) || (!Number.isNaN(rowQuarterIdx) && rowQuarterIdx <= maxQuarterIdx);
+                const plannedMatch = plannedFromMatch && plannedToMatch;
+                const teamMatch = !selectedTeam || rowTeam === selectedTeam;
+                const statusMatch = !selectedStatus || rowStatus === selectedStatus;
+                row.style.display = (yearMatch && plannedMatch && teamMatch && statusMatch) ? '' : 'none';
+
+                const rowId = row.getAttribute('data-row-id');
+                const detailsRow = document.getElementById('effRemarksRow' + rowId);
+                if (!yearMatch || !plannedMatch || !teamMatch || !statusMatch) {
+                    if (detailsRow) detailsRow.style.display = 'none';
+                }
+            });
+
+            updateEffSavingsTotal();
+            updateEffGeneratedCapacityTotal();
+        }
+
+        function parseSavings(value) {
+            const normalized = (value || '').replace(/[^0-9.\-]/g, '');
+            const parsed = parseFloat(normalized);
+            return Number.isFinite(parsed) ? parsed : 0;
+        }
+
+        function parseGeneratedCapacity(value) {
+            const normalized = (value || '').replace(/[^0-9.\-]/g, '');
+            const parsed = parseFloat(normalized);
+            return Number.isFinite(parsed) ? parsed : 0;
+        }
+
+        function isDiscontinuedEfficiencyRow(row) {
+            const rowStatus = (row.children[4] ? row.children[4].textContent : '').trim();
+            return rowStatus === 'Discontinued';
+        }
+
+        function updateEffSavingsTotal() {
+            if (!effSavingsTotal) return;
+
+            let total = 0;
+            effRows.forEach(row => {
+                if (row.style.display === 'none') return;
+                if (isDiscontinuedEfficiencyRow(row)) return;
+                total += parseSavings(row.dataset.effSavings || '');
+            });
+
+            effSavingsTotal.textContent = new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD'
+            }).format(total);
+        }
+
+        function updateEffGeneratedCapacityTotal() {
+            if (!effGeneratedCapacityTotal) return;
+
+            let total = 0;
+            effRows.forEach(row => {
+                if (row.style.display === 'none') return;
+                if (isDiscontinuedEfficiencyRow(row)) return;
+                total += parseGeneratedCapacity(row.querySelector('td:nth-child(3)')?.textContent || row.dataset.effGeneratedCapacity || '');
+            });
+
+            effGeneratedCapacityTotal.textContent = new Intl.NumberFormat('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(total);
+        }
+
+        populateEffFilterOptions();
+        populateSavingsSummaryFilters();
+        if (effFilterYear) effFilterYear.addEventListener('change', applyEffFilters);
+        if (effFilterPlannedFrom) effFilterPlannedFrom.addEventListener('change', applyEffFilters);
+        if (effFilterPlannedTo) effFilterPlannedTo.addEventListener('change', applyEffFilters);
+        if (effFilterTeam) effFilterTeam.addEventListener('change', applyEffFilters);
+        if (effFilterStatus) effFilterStatus.addEventListener('change', applyEffFilters);
+        if (savingsSummaryYear) savingsSummaryYear.addEventListener('change', renderSavingsSummary);
+        if (savingsSummaryTeam) savingsSummaryTeam.addEventListener('change', renderSavingsSummary);
+        if (savingsSummaryStatus) savingsSummaryStatus.addEventListener('change', renderSavingsSummary);
+        if (savingsSummaryDateFrom) savingsSummaryDateFrom.addEventListener('change', renderSavingsSummary);
+        if (savingsSummaryDateTo) savingsSummaryDateTo.addEventListener('change', renderSavingsSummary);
+        if (savingsSummaryDiscontinued) savingsSummaryDiscontinued.addEventListener('change', renderSavingsSummary);
+        if (savingsSummarySort) savingsSummarySort.addEventListener('change', renderSavingsSummary);
+        if (savingsSummaryClear) {
+            savingsSummaryClear.addEventListener('click', function() {
+                if (savingsSummaryYear) savingsSummaryYear.value = '';
+                if (savingsSummaryTeam) savingsSummaryTeam.value = '';
+                if (savingsSummaryStatus) savingsSummaryStatus.value = '';
+                if (savingsSummaryDateFrom) savingsSummaryDateFrom.value = '';
+                if (savingsSummaryDateTo) savingsSummaryDateTo.value = '';
+                if (savingsSummaryDiscontinued) savingsSummaryDiscontinued.value = 'N';
+                if (savingsSummarySort) savingsSummarySort.value = 'savings_desc';
+                renderSavingsSummary();
+            });
+        }
+        if (phaseFilterTeam) phaseFilterTeam.addEventListener('change', renderEfficienciesPhase);
+        if (phaseFilterStatus) phaseFilterStatus.addEventListener('change', renderEfficienciesPhase);
+        if (phaseFilterReleaseFrom) phaseFilterReleaseFrom.addEventListener('change', renderEfficienciesPhase);
+        if (phaseFilterReleaseTo) phaseFilterReleaseTo.addEventListener('change', renderEfficienciesPhase);
+        if (phaseClearFilters) {
+            phaseClearFilters.addEventListener('click', function() {
+                if (phaseFilterTeam) phaseFilterTeam.value = '';
+                if (phaseFilterStatus) phaseFilterStatus.value = '';
+                if (phaseFilterReleaseFrom) phaseFilterReleaseFrom.value = '';
+                if (phaseFilterReleaseTo) phaseFilterReleaseTo.value = '';
+                renderEfficienciesPhase();
+            });
+        }
+        if (effClearFilters) {
+            effClearFilters.addEventListener('click', function() {
+                if (effFilterYear) effFilterYear.value = '';
+                if (effFilterPlannedFrom) effFilterPlannedFrom.value = '';
+                if (effFilterPlannedTo) effFilterPlannedTo.value = '';
+                if (effFilterTeam) effFilterTeam.value = '';
+                if (effFilterStatus) effFilterStatus.value = '';
+
+                if (efficienciesCard && efficienciesCard.classList.contains('expanded')) {
+                    expandedAllOverride = true;
+                    effRows.forEach(row => {
+                        row.style.display = '';
+                    });
+                    updateEffSavingsTotal();
+                    updateEffGeneratedCapacityTotal();
+                } else {
+                    restoreEffRowsToBaseline();
+                }
+            });
+        }
+        updateEffSavingsTotal();
+        updateEffGeneratedCapacityTotal();
+        renderSavingsSummary();
+        renderEfficienciesPhase();
+
+        function parseRemarksText(rawText) {
+            const text = (rawText || '').replace(/\r\n/g, '\n');
+            const milestoneMatch = text.match(/Milestone:\s*([\s\S]*?)(?:\nChallenges:|$)/i);
+            const challengesMatch = text.match(/Challenges:\s*([\s\S]*?)(?:\nNext Steps:|$)/i);
+            const nextStepsMatch = text.match(/Next Steps:\s*([\s\S]*)$/i);
+            return {
+                milestone: milestoneMatch ? milestoneMatch[1].trim() : '',
+                challenges: challengesMatch ? challengesMatch[1].trim() : '',
+                next_steps: nextStepsMatch ? nextStepsMatch[1].trim() : ''
+            };
+        }
+
+        function formatRemarksSection(label, value) {
+            return `${label}\n${value ? '- ' + value.replace(/\n/g, '\n- ') : '- '}`;
+        }
+
+        function composeRemarksText(rowId) {
+            const milestone = (document.querySelector(`.eff-remarks-input[data-row-id="${rowId}"][data-remarks-part="milestone"]`)?.value || '').trim();
+            const challenges = (document.querySelector(`.eff-remarks-input[data-row-id="${rowId}"][data-remarks-part="challenges"]`)?.value || '').trim();
+            const nextSteps = (document.querySelector(`.eff-remarks-input[data-row-id="${rowId}"][data-remarks-part="next_steps"]`)?.value || '').trim();
+
+            return `Milestone: ${milestone}\nChallenges: ${challenges}\nNext Steps: ${nextSteps}`;
+        }
+
+        function saveRemarks(rowId) {
+            const mainRow = document.querySelector(`tr.eff-main-row[data-row-id="${rowId}"]`);
+            if (mainRow) {
+                mainRow.dataset.effRemarks = composeRemarksText(rowId);
+            }
+
+            const body = new URLSearchParams({ remarks: composeRemarksText(rowId) });
+            const csrfTokenEl = document.getElementById('dashboardCsrfToken');
+            if (csrfTokenEl && csrfTokenEl.value) {
+                body.append('csrf_token', csrfTokenEl.value);
+            }
+            fetch(`/update_efficiency_remarks/${rowId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: body.toString()
+            });
+        }
+
+        function autoResizeRemarks(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.max(34, textarea.scrollHeight) + 'px';
+        }
+
+        effRows.forEach(function(row) {
+            const rowId = row.getAttribute('data-row-id');
+            const parsed = parseRemarksText(row.dataset.effRemarks || '');
+
+            const milestoneEl = document.querySelector(`.eff-remarks-input[data-row-id="${rowId}"][data-remarks-part="milestone"]`);
+            const challengesEl = document.querySelector(`.eff-remarks-input[data-row-id="${rowId}"][data-remarks-part="challenges"]`);
+            const nextStepsEl = document.querySelector(`.eff-remarks-input[data-row-id="${rowId}"][data-remarks-part="next_steps"]`);
+
+            if (milestoneEl) milestoneEl.value = parsed.milestone;
+            if (challengesEl) challengesEl.value = parsed.challenges;
+            if (nextStepsEl) nextStepsEl.value = parsed.next_steps;
+        });
+
+        remarksToggleButtons.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const rowId = btn.getAttribute('data-row-id');
+                const detailsRow = document.getElementById('effRemarksRow' + rowId);
+                if (!detailsRow) return;
+
+                const isOpen = detailsRow.style.display === 'table-row';
+                detailsRow.style.display = isOpen ? 'none' : 'table-row';
+
+                if (!isOpen) {
+                    detailsRow.querySelectorAll('.eff-remarks-input').forEach(function(textarea) {
+                        autoResizeRemarks(textarea);
+                    });
+                }
+            });
+        });
+
+        remarksInputs.forEach(function(textarea) {
+            autoResizeRemarks(textarea);
+
+            textarea.addEventListener('input', function() {
+                autoResizeRemarks(textarea);
+            });
+
+            textarea.addEventListener('blur', function() {
+                const rowId = textarea.getAttribute('data-row-id');
+                if (!rowId) return;
+                saveRemarks(rowId);
+            });
+        });
+
+        if (emailQuarterFrom) emailQuarterFrom.addEventListener('change', refreshProjectChecklistForQuarterRange);
+        if (emailQuarterTo) emailQuarterTo.addEventListener('change', refreshProjectChecklistForQuarterRange);
+        if (emailYearFilter) emailYearFilter.addEventListener('change', refreshProjectChecklistForQuarterRange);
+        if (emailTeamFilter) emailTeamFilter.addEventListener('change', refreshProjectChecklistForQuarterRange);
+        if (emailSelectAllProjects) {
+            emailSelectAllProjects.addEventListener('click', function() {
+                emailProjectList.querySelectorAll('.email-project-checkbox').forEach(cb => { cb.checked = true; });
+            });
+        }
+        if (emailClearProjects) {
+            emailClearProjects.addEventListener('click', function() {
+                emailProjectList.querySelectorAll('.email-project-checkbox').forEach(cb => { cb.checked = false; });
+            });
+        }
+
+        if (efficienciesEmailModalEl) {
+            efficienciesEmailModal = new bootstrap.Modal(efficienciesEmailModalEl);
+        }
+
+        if (emailEfficienciesBtn) {
+            emailEfficienciesBtn.addEventListener('click', function() {
+                buildEffEmailSelectionOptions();
+                if (efficienciesEmailModal) {
+                    efficienciesEmailModal.show();
+                }
+            });
+        }
+
+        if (generateEffEmailBtn) {
+            generateEffEmailBtn.addEventListener('click', function() {
+                const bounds = getQuarterRangeBounds();
+                if (!bounds) {
+                    alert('Please select a valid From Quarter and To Quarter.');
+                    return;
+                }
+
+                const selectedIds = new Set(
+                    Array.from(emailProjectList.querySelectorAll('.email-project-checkbox:checked')).map(cb => cb.value)
+                );
+                const selectedRows = getRowsInQuarterRange().filter(row => selectedIds.has(row.getAttribute('data-row-id')));
+
+                if (!selectedRows.length) {
+                    alert('No matching efficiencies found for the selected option.');
+                    return;
+                }
+
+                if (efficienciesEmailModal) efficienciesEmailModal.hide();
+                generateEfficienciesEmailReport(selectedRows);
+            });
+        }
+
+        function generateEfficienciesEmailReport(selectedRows) {
+            if (!selectedRows.length) {
+                alert('No efficiencies selected to include in the email.');
+                return;
+            }
+
+            const visibleRows = selectedRows;
+
+                const today = new Date();
+                const formattedDate = today.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+
+                const subject = `Efficiencies Update as of ${formattedDate}`;
+
+                function escapeHtml(text) {
+                    return (text || '')
+                        .replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;')
+                        .replace(/"/g, '&quot;')
+                        .replace(/'/g, '&#39;');
+                }
+
+                function linesForMail(label, value) {
+                    const trimmed = (value || '').trim();
+                    if (!trimmed) return `${label}\n-`;
+                    return `${label}\n- ${trimmed.replace(/\n/g, '\n- ')}`;
+                }
+
+                const tableStyle = 'border-collapse:collapse;width:100%;font-family:Segoe UI,Arial,sans-serif;font-size:13px;margin:0 0 14px 0;border:1px solid #d8dfe7;border-radius:8px;overflow:hidden;';
+                const rowLabelStyle = 'width:26%;background:#f4f8fc;color:#0f3554;font-weight:700;padding:9px 12px;border:1px solid #d8dfe7;vertical-align:top;';
+                const rowValueStyle = 'width:74%;background:#ffffff;color:#2d3748;padding:9px 12px;border:1px solid #d8dfe7;vertical-align:top;';
+                const rowValueAltStyle = 'width:74%;background:#fbfdff;color:#2d3748;padding:9px 12px;border:1px solid #d8dfe7;vertical-align:top;';
+                const phaseHeaderStyle = 'background:#1f6b8b;color:#ffffff;font-weight:700;padding:9px 10px;border:1px solid #d1d9e0;text-align:center;';
+                const phaseCellStyle = 'padding:8px 10px;border:1px solid #d1d9e0;background:#ffffff;color:#1f2937;vertical-align:middle;';
+
+                function getPhaseStatusEmailStyle(status) {
+                    const normalized = (status || '').trim().toLowerCase();
+                    if (normalized === 'on track') return 'background:#c8efc8;color:#226b2f;';
+                    if (normalized === 'slight delay') return 'background:#fff1bf;color:#a06a00;';
+                    if (normalized === 'delay') return 'background:#ffd9d6;color:#b42318;';
+                    if (normalized === 'completed') return 'background:#dbeafe;color:#1d4ed8;';
+                    if (normalized === 'discontinued') return 'background:#eceff3;color:#475467;';
+                    return 'background:#eef2f6;color:#475569;';
+                }
+
+                const phaseSummaryRowsHtml = visibleRows.map(function(row, index) {
+                    const projectTitle = getRowProjectTitle(row) || '-';
+                    const phase = getEffStatusText(row) || '-';
+                    const currentPhaseEndDate = getPhaseCurrentEndValue(row);
+                    const phaseStatus = getPhaseStatusValue(row) || '-';
+                    const plannedReleaseDate = getPhasePlannedReleaseDate(row);
+
+                    return '<tr>' +
+                        `<td style="${phaseCellStyle}">${index + 1}. ${escapeHtml(projectTitle)}</td>` +
+                        `<td style="${phaseCellStyle};text-align:center;">${escapeHtml(phase)}</td>` +
+                        `<td style="${phaseCellStyle};text-align:center;">${escapeHtml(currentPhaseEndDate ? formatShortDate(currentPhaseEndDate) : '-')}</td>` +
+                        `<td style="${phaseCellStyle}${getPhaseStatusEmailStyle(phaseStatus)}text-align:center;font-weight:700;">${escapeHtml(phaseStatus)}</td>` +
+                        `<td style="${phaseCellStyle};text-align:center;">${escapeHtml(plannedReleaseDate ? formatShortDate(plannedReleaseDate) : '-')}</td>` +
+                        '</tr>';
+                }).join('');
+
+                const phaseSummaryTableHtml = `
+                    <div style="font-size:16px;font-weight:bold;margin:16px 0 10px 0;color:#0078d4;">Efficiencies Phase</div>
+                    <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%;font-family:Segoe UI,Arial,sans-serif;font-size:13px;margin:0 0 18px 0;border:1px solid #d1d9e0;">
+                        <thead>
+                            <tr>
+                                <th style="${phaseHeaderStyle}text-align:left;">Project</th>
+                                <th style="${phaseHeaderStyle}">Phase</th>
+                                <th style="${phaseHeaderStyle}">Current Phase End Date</th>
+                                <th style="${phaseHeaderStyle}">Status</th>
+                                <th style="${phaseHeaderStyle}">Planned Release Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>${phaseSummaryRowsHtml}</tbody>
+                    </table>
+                `;
+
+                const cardBlocks = visibleRows.map(function(row, index) {
+                    const projectTitle = getRowProjectTitle(row);
+                    const projectDescription = getRowProjectDescription(row);
+                    const projectOwner = (row.dataset.effOwner || '').trim() || '-';
+                    const remarks = parseRemarksText(row.dataset.effRemarks || '');
+
+                    return `<table role="presentation" cellpadding="0" cellspacing="0" style="${tableStyle}">` +
+                        `<tr><td colspan="2" style="background:#0f3554;color:#ffffff;padding:10px 12px;font-weight:700;font-size:13px;border:1px solid #0f3554;">${index + 1}. ${escapeHtml(projectTitle || '-')}</td></tr>` +
+                        `<tr><td style="${rowLabelStyle}">Project name:</td><td style="${rowValueStyle}">${escapeHtml(projectTitle || '-')}</td></tr>` +
+                        `<tr><td style="${rowLabelStyle}">Project Description:</td><td style="${rowValueAltStyle}">${escapeHtml(projectDescription || '-').replace(/\n/g, '<br>')}</td></tr>` +
+                        `<tr><td style="${rowLabelStyle}">Project Owner:</td><td style="${rowValueStyle}">${escapeHtml(projectOwner)}</td></tr>` +
+                        `<tr><td style="${rowLabelStyle}">Milestone:</td><td style="${rowValueAltStyle}">${escapeHtml(remarks.milestone || '-').replace(/\n/g, '<br>')}</td></tr>` +
+                        `<tr><td style="${rowLabelStyle}">Challenges:</td><td style="${rowValueStyle}">${escapeHtml(remarks.challenges || '-').replace(/\n/g, '<br>')}</td></tr>` +
+                        `<tr><td style="${rowLabelStyle}">Next Steps:</td><td style="${rowValueAltStyle}">${escapeHtml(remarks.next_steps || '-').replace(/\n/g, '<br>')}</td></tr>` +
+                        `</table>`;
+                });
+
+                let cardsTableHtml = cardBlocks.join('');
+
+                const mailSections = visibleRows.map(function(row, index) {
+                    const projectTitle = getRowProjectTitle(row);
+                    const projectDescription = getRowProjectDescription(row);
+                    const projectOwner = (row.dataset.effOwner || '').trim() || '-';
+                    const remarks = parseRemarksText(row.dataset.effRemarks || '');
+
+                    return [
+                        `${index + 1}.`,
+                        `Project name: ${projectTitle || '-'}`,
+                        `Project Description: ${projectDescription || '-'}`,
+                        `Project Owner: ${projectOwner}`,
+                        linesForMail('Milestone:', remarks.milestone),
+                        linesForMail('Challenges:', remarks.challenges),
+                        linesForMail('Next Steps:', remarks.next_steps)
+                    ].join('\n');
+                });
+
+                const phaseMailSection = [
+                    'Efficiencies Phase',
+                    visibleRows.map(function(row, index) {
+                        const projectTitle = getRowProjectTitle(row) || '-';
+                        const phase = getEffStatusText(row) || '-';
+                        const currentPhaseEndDate = getPhaseCurrentEndValue(row);
+                        const phaseStatus = getPhaseStatusValue(row) || '-';
+                        const plannedReleaseDate = getPhasePlannedReleaseDate(row);
+                        return `${index + 1}. ${projectTitle} | Phase: ${phase} | Current Phase End Date: ${currentPhaseEndDate ? formatShortDate(currentPhaseEndDate) : '-'} | Status: ${phaseStatus} | Planned Release Date: ${plannedReleaseDate ? formatShortDate(plannedReleaseDate) : '-'}`;
+                    }).join('\n')
+                ].join('\n');
+
+                const mailBody = [formattedDate, '', phaseMailSection, '', mailSections.join('\n\n')].join('\n');
+
+                const reportHtml = `
+                    <div style="font-family:Segoe UI,Arial,sans-serif;font-size:14px;line-height:1.6;margin-bottom:20px;color:#333;">
+                        <p>Hello everyone,</p>
+                        <p>Please find below the efficiencies update as of <strong>${formattedDate}</strong>. This report includes the current phase view followed by project milestones, challenges, and next steps. Kindly let me know if you have any questions.</p>
+                    </div>
+                    ${phaseSummaryTableHtml}
+                    <div style="font-size:16px;font-weight:bold;margin:16px 0 10px 0;color:#0078d4;">Efficiencies Update</div>
+                    ${cardsTableHtml}
+                    <div style="font-family:Segoe UI,Arial,sans-serif;font-size:14px;line-height:1.6;margin-top:30px;padding-top:20px;border-top:1px solid #ddd;color:#333;"><p>Thank you</p></div>
+                `;
+
+                let htmlWindow = window.open('', '_blank', 'width=1100,height=800');
+                htmlWindow.document.write('<html><head><title>Efficiencies Email Report</title><style>');
+                htmlWindow.document.write('body { font-family: Segoe UI, Arial, sans-serif; padding: 20px; background: #f5f5f5; }');
+                htmlWindow.document.write('.header { margin-bottom: 20px; }');
+                htmlWindow.document.write('.copy-btn { padding: 12px 24px; background: #28a745; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; margin-right: 10px; }');
+                htmlWindow.document.write('.copy-btn:hover { background: #218838; }');
+                htmlWindow.document.write('.outlook-btn { padding: 12px 24px; background: #0078d4; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; text-decoration: none; display: inline-block; }');
+                htmlWindow.document.write('.outlook-btn:hover { background: #005a9e; }');
+                htmlWindow.document.write('.report-container { background: white; padding: 20px; border-radius: 5px; margin-top: 20px; }');
+                htmlWindow.document.write('.feedback { margin-top: 10px; color: #28a745; font-weight: bold; display: none; }');
+                htmlWindow.document.write('</style></head><body>');
+                htmlWindow.document.write('<div class="header">');
+                htmlWindow.document.write('<h2>Efficiencies Report</h2>');
+                htmlWindow.document.write('<button class="copy-btn" onclick="copyToClipboard()">Copy Report</button>');
+                htmlWindow.document.write('<a href="mailto:" class="outlook-btn">Open Outlook</a>');
+                htmlWindow.document.write('<div class="feedback" id="feedback">Copied to clipboard!</div>');
+                htmlWindow.document.write('</div>');
+                htmlWindow.document.write('<div class="report-container" id="reportContent">' + reportHtml + '</div>');
+                htmlWindow.document.write('<script type="text/javascript">');
+                htmlWindow.document.write('function copyToClipboard() {');
+                htmlWindow.document.write('  const reportEl = document.getElementById("reportContent");');
+                htmlWindow.document.write('  const reportContent = reportEl ? reportEl.outerHTML : "";');
+                htmlWindow.document.write('  const styledHtml = "<html><head><meta charset=\'UTF-8\'></head><body>" + reportContent + "</body></html>";');
+                htmlWindow.document.write('  const plainText = (reportEl ? reportEl.innerText : "").trim();');
+                htmlWindow.document.write('  const feedback = document.getElementById("feedback");');
+                htmlWindow.document.write('  const showFeedback = (msg, ok) => {');
+                htmlWindow.document.write('    if (!feedback) return;');
+                htmlWindow.document.write('    feedback.textContent = msg;');
+                htmlWindow.document.write('    feedback.style.color = ok ? "#28a745" : "#d90429";');
+                htmlWindow.document.write('    feedback.style.display = "block";');
+                htmlWindow.document.write('    setTimeout(() => { feedback.style.display = "none"; }, 2500);');
+                htmlWindow.document.write('  };');
+                htmlWindow.document.write('  const fallbackCopy = () => {');
+                htmlWindow.document.write('    try {');
+                htmlWindow.document.write('      const temp = document.createElement("div");');
+                htmlWindow.document.write('      temp.style.position = "fixed";');
+                htmlWindow.document.write('      temp.style.left = "-9999px";');
+                htmlWindow.document.write('      temp.setAttribute("contenteditable", "true");');
+                htmlWindow.document.write('      temp.innerHTML = reportContent;');
+                htmlWindow.document.write('      document.body.appendChild(temp);');
+                htmlWindow.document.write('      const range = document.createRange();');
+                htmlWindow.document.write('      range.selectNodeContents(temp);');
+                htmlWindow.document.write('      const sel = window.getSelection();');
+                htmlWindow.document.write('      sel.removeAllRanges();');
+                htmlWindow.document.write('      sel.addRange(range);');
+                htmlWindow.document.write('      const ok = document.execCommand("copy");');
+                htmlWindow.document.write('      sel.removeAllRanges();');
+                htmlWindow.document.write('      document.body.removeChild(temp);');
+                htmlWindow.document.write('      if (ok) showFeedback("Copied to clipboard!", true);');
+                htmlWindow.document.write('      else showFeedback("Copy failed. Please select and copy manually.", false);');
+                htmlWindow.document.write('    } catch (e) {');
+                htmlWindow.document.write('      showFeedback("Copy failed. Please select and copy manually.", false);');
+                htmlWindow.document.write('    }');
+                htmlWindow.document.write('  };');
+                htmlWindow.document.write('  if (navigator.clipboard && window.ClipboardItem) {');
+                htmlWindow.document.write('    const htmlBlob = new Blob([styledHtml], { type: "text/html" });');
+                htmlWindow.document.write('    const textBlob = new Blob([plainText], { type: "text/plain" });');
+                htmlWindow.document.write('    navigator.clipboard.write([new ClipboardItem({ "text/html": htmlBlob, "text/plain": textBlob })])');
+                htmlWindow.document.write('      .then(() => showFeedback("Copied to clipboard!", true))');
+                htmlWindow.document.write('      .catch(() => fallbackCopy());');
+                htmlWindow.document.write('  } else {');
+                htmlWindow.document.write('    fallbackCopy();');
+                htmlWindow.document.write('  }');
+                htmlWindow.document.write('}');
+                htmlWindow.document.write('</scr' + 'ipt>');
+                htmlWindow.document.write('</body></html>');
+                htmlWindow.document.close();
+        }
+
+        const shouldExpandEfficiencies = {{ 'true' if eff_expanded else 'false' }};
+        const urlEffView = new URL(window.location.href).searchParams.get('eff_view');
+        if (urlEffView === 'summary') {
+            efficienciesMode = 'summary';
+            renderSavingsSummary();
+        } else if (urlEffView === 'phase') {
+            efficienciesMode = 'phase';
+            renderEfficienciesPhase();
+        }
+        if (shouldExpandEfficiencies) {
+            setEfficienciesExpanded(true);
+        }
+
+        document.querySelectorAll('a[data-edit-spt]').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                var url = btn.getAttribute('data-edit-spt');
+                document.getElementById('editSptFrame').src = url;
+                var modal = new bootstrap.Modal(document.getElementById('editSptModal'));
+                modal.show();
+            });
+        });
+        document.querySelectorAll('a[data-edit-efficiency]').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                var url = btn.getAttribute('data-edit-efficiency');
+                if (efficienciesCard && efficienciesCard.classList.contains('expanded')) {
+                    window.location.href = url + '?standalone=1&eff_view=' + encodeURIComponent(efficienciesMode);
+                    return;
+                }
+                document.getElementById('editEfficiencyFrame').src = url;
+                var modal = new bootstrap.Modal(document.getElementById('editEfficiencyModal'));
+                modal.show();
+            });
+        });
+    });
+    window.addEventListener('message', function(event) {
+        if (event.data === 'closeModal') {
+            // Close all modals if any child iframe sends closeModal
+            var modals = ['addSptModal', 'addEfficiencyModal', 'settingsModal', 'editSptModal', 'editEfficiencyModal'];
+            modals.forEach(function(id) {
+                var modalEl = document.getElementById(id);
+                if (modalEl) {
+                    var modal = bootstrap.Modal.getInstance(modalEl);
+                    if (modal) modal.hide();
+                }
+            });
+        }
+    });
+    function confirmDeleteSpt(btn) {
+        if (confirm('Are you sure you want to delete this entry?')) {
+            const csrfTokenEl = document.getElementById('dashboardCsrfToken');
+            const body = new URLSearchParams();
+            if (csrfTokenEl && csrfTokenEl.value) {
+                body.append('csrf_token', csrfTokenEl.value);
+            }
+            fetch(btn.getAttribute('data-url'), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: body.toString()
+            }).then(() => window.location.reload());
+        }
+    }
+    function confirmDeleteEfficiency(btn) {
+        if (confirm('Are you sure you want to delete this entry?')) {
+            const csrfTokenEl = document.getElementById('dashboardCsrfToken');
+            const body = new URLSearchParams();
+            if (csrfTokenEl && csrfTokenEl.value) {
+                body.append('csrf_token', csrfTokenEl.value);
+            }
+            fetch(btn.getAttribute('data-url'), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: body.toString()
+            }).then(() => window.location.reload());
+        }
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        const emailBtn = document.getElementById('emailDashboardBtn');
+        if (!emailBtn) return;
+
+        emailBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            // Open popup immediately to avoid browser popup blocking.
+            let htmlWindow = window.open('', '_blank', 'width=900,height=700');
+            if (!htmlWindow) {
+                alert('Unable to open report window. Please allow pop-ups for this site.');
+                return;
+            }
+
+            // Gather dashboard data as HTML tables
+            let today = new Date();
+            let yyyy = today.getFullYear();
+            let mm = String(today.getMonth() + 1).padStart(2, '0');
+            let dd = String(today.getDate()).padStart(2, '0');
+            let subjectDateStr = `${mm}/${dd}/${yyyy}`;
+            let subject = `NBTE Inflow/Outflow as of ${subjectDateStr}`;
+            // Clean inline styles for tables
+            let tableStyle = 'border-collapse:collapse;width:100%;font-family:Segoe UI,Arial,sans-serif;font-size:13px;margin:20px 0;';
+            let thStyle = 'background:#0078d4;color:#fff;padding:12px;border:1px solid #ddd;text-align:left;font-weight:bold;';
+            let tdStyle = 'padding:10px 12px;border:1px solid #ddd;background:#fff;color:#333;';
+            let sectionTitleStyle = 'font-size:16px;font-weight:bold;margin:16px 0 8px 0;color:#0078d4;';
+              let body = '';
+            
+            // Add greeting message with today's date
+            let dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+            let formattedDate = today.toLocaleDateString('en-US', dateOptions);
+            body += `<div style="font-family:Segoe UI,Arial,sans-serif;font-size:14px;line-height:1.6;margin-bottom:20px;color:#333;">`;
+            body += `<p>Hello everyone,</p>`;
+            body += `<p>Please find below the NBTE inflow/outflow report as of <strong>${formattedDate}</strong> for your review. The report reflects the current capacity movements and related updates. Kindly let me know if you have any questions or require further clarification.</p>`;
+            body += `</div>`;
+            
+            // Metrics Table
+            let metrics = document.querySelectorAll('.metric-card .metric-value');
+            let titles = document.querySelectorAll('.metric-card .metric-title');
+            const staffingTitle = Array.from(titles).find(function(t) {
+                const txt = (t.textContent || '').trim();
+                return txt === 'UNDERSTAFFED' || txt === 'OVERSTAFFED';
+            });
+            const metricShortLabels = [
+                'Headcount',
+                'FTE Requirement',
+                'Total Inflow',
+                'Outflow',
+                staffingTitle ? staffingTitle.textContent.trim() : 'STAFFING',
+                'GNS Efficiencies',
+                'Entity Efficiencies',
+            ];
+            body += `<div style="${sectionTitleStyle}">Dashboard Metrics</div>`;            body += `<table style="${tableStyle}">`;
+            // Add header row for Dashboard Metrics
+            body += '<tr>' +
+                `<th style="${thStyle}width:25%;">Metric</th>` +
+                `<th style="${thStyle}width:75%;">Value</th>` +
+                '</tr>';
+            for (let i = 0; i < metrics.length; i++) {
+                let shortLabel = metricShortLabels[i] || titles[i].textContent.trim();
+                let value = metrics[i].textContent.trim();
+                let rowBg = i % 2 === 0 ? '#f9f9f9' : '#fff';
+                // Determine color for UNDERSTAFFED/OVERSTAFFED
+                let valueBg = rowBg;
+                let valueColor = '#333';
+                if (shortLabel.includes('UNDERSTAFFED') || shortLabel.includes('OVERSTAFFED')) {
+                    if (shortLabel.includes('UNDERSTAFFED')) {
+                        valueBg = '#ffebee';
+                        valueColor = '#d90429';
+                    } else if (shortLabel.includes('OVERSTAFFED')) {
+                        valueBg = '#e3f2fd';
+                        valueColor = '#0074d9';
+                    }
+                }
+                let displayValue = (shortLabel.includes('UNDERSTAFFED') || shortLabel.includes('OVERSTAFFED')) ? `<strong>${value}</strong>` : value;
+                body += `<tr>` +
+                    `<td style="${tdStyle}background:${rowBg};width:25%;">${shortLabel}</td>` +
+                    `<td style="${tdStyle}background:${valueBg};color:${valueColor};font-weight:bold;width:75%;">${displayValue}</td>` +
+                    `</tr>`;
+            }
+            body += '</table>';// SPT Table
+            body += `<div style="${sectionTitleStyle}">SPT Table</div>`;
+            body += `<table style="${tableStyle}">`;
+            let sptTable = document.querySelectorAll('table.table-bordered')[0];
+            let sptRows = sptTable.querySelectorAll('tbody tr');
+            let sptHeaders = Array.from(sptTable.querySelectorAll('thead th'));
+            // Exclude 'Remaining FTE Capacity' and 'Action' columns
+            let sptHeaderIndices = [];
+            let sptHeaderHtml = '';
+            sptHeaders.forEach((th, idx) => {
+                const text = th.textContent.trim();
+                if (text !== 'Remaining FTE Capacity' && text !== 'Action') {
+                    sptHeaderIndices.push(idx);
+                    sptHeaderHtml += `<th style="${thStyle}">${text}</th>`;
+                }
+            });
+            body += '<tr>' + sptHeaderHtml + '</tr>';
+            sptRows.forEach((row, idx) => {
+                let rowBg = idx % 2 === 0 ? '#f9f9f9' : '#fff';
+                let cells = Array.from(row.querySelectorAll('td'));
+                let rowHtml = '';
+                sptHeaderIndices.forEach(i => {
+                    rowHtml += `<td style="${tdStyle}background:${rowBg};">${cells[i].textContent.trim()}</td>`;
+                });
+                body += '<tr>' + rowHtml + '</tr>';
+            });
+            body += '</table>';            // Efficiencies Table
+            body += `<div style="${sectionTitleStyle}">Efficiencies</div>`;
+            body += `<table style="${tableStyle}">`;
+            let effTable = document.querySelectorAll('table.table-bordered')[1];
+            if (!effTable) {
+                htmlWindow.close();
+                alert('Unable to generate email report. Efficiencies table was not found.');
+                return;
+            }
+            let effRows = effTable.querySelectorAll('tbody tr.eff-main-row');
+            let effHeaders = Array.from(effTable.querySelectorAll('thead th'));
+            // Exclude 'Action' column
+            let effHeaderIndices = [];
+            let effHeaderHtml = '';
+            effHeaders.forEach((th, idx) => {
+                const text = th.textContent.trim();
+                if (text !== 'Action') {
+                    effHeaderIndices.push(idx);
+                    effHeaderHtml += `<th style="${thStyle}">${text}</th>`;
+                }
+            });
+            body += '<tr>' + effHeaderHtml + '</tr>';
+            effRows.forEach((row, idx) => {
+                let rowBg = idx % 2 === 0 ? '#f9f9f9' : '#fff';
+                let cells = Array.from(row.querySelectorAll('td'));
+                let rowHtml = '';            effHeaderIndices.forEach(i => {
+                    rowHtml += `<td style="${tdStyle}background:${rowBg};">${cells[i].textContent.trim()}</td>`;
+                });
+                body += '<tr>' + rowHtml + '</tr>';
+            });
+            body += '</table>';            // Add thank you message at the end
+            body += `<div style="font-family:Segoe UI,Arial,sans-serif;font-size:14px;line-height:1.6;margin-top:30px;padding-top:20px;border-top:1px solid #ddd;color:#333;">`;
+            body += `<p>Thank you</p>`;
+            body += `</div>`;
+
+            // Build report content in popup window.
+            htmlWindow.document.write('<html><head><title>Email Report</title><style>');
+            htmlWindow.document.write('body { font-family: Segoe UI, Arial, sans-serif; padding: 20px; background: #f5f5f5; }');
+            htmlWindow.document.write('.header { margin-bottom: 20px; }');
+            htmlWindow.document.write('.copy-btn { padding: 12px 24px; background: #28a745; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; margin-right: 10px; }');
+            htmlWindow.document.write('.copy-btn:hover { background: #218838; }');
+            htmlWindow.document.write('.outlook-btn { padding: 12px 24px; background: #0078d4; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; text-decoration: none; display: inline-block; }');
+            htmlWindow.document.write('.outlook-btn:hover { background: #005a9e; }');
+            htmlWindow.document.write('.report-container { background: white; padding: 20px; border-radius: 5px; margin-top: 20px; }');
+            htmlWindow.document.write('.feedback { margin-top: 10px; color: #28a745; font-weight: bold; display: none; }');
+            htmlWindow.document.write('</style></head><body>');
+            htmlWindow.document.write('<div class="header">');
+            htmlWindow.document.write('<h2>NBTE Inflow-Outflow Dashboard Report</h2>');
+            htmlWindow.document.write('<button class="copy-btn" onclick="copyToClipboard()">📋 Copy Report</button>');
+            htmlWindow.document.write('<a href="mailto:?subject=' + encodeURIComponent(subject) + '" class="outlook-btn">📧 Open Outlook</a>');
+            htmlWindow.document.write('<div class="feedback" id="feedback">✓ Copied to clipboard!</div>');
+            htmlWindow.document.write('</div>');            htmlWindow.document.write('<div class="report-container" id="reportContent">' + body + '</div>');
+            htmlWindow.document.write('<script type="text/javascript">');
+            htmlWindow.document.write('function copyToClipboard() {');
+            htmlWindow.document.write('  const reportContent = document.getElementById("reportContent").innerHTML;');
+            htmlWindow.document.write('  const blob = new Blob([reportContent], { type: "text/html" });');
+            htmlWindow.document.write('  navigator.clipboard.write([new ClipboardItem({ "text/html": blob })]).then(() => {');
+            htmlWindow.document.write('    const feedback = document.getElementById("feedback");');
+            htmlWindow.document.write('    feedback.style.display = "block";');
+            htmlWindow.document.write('    setTimeout(() => { feedback.style.display = "none"; }, 2000);');
+            htmlWindow.document.write('  }).catch(err => alert("Failed to copy: " + err));');
+            htmlWindow.document.write('}');
+            htmlWindow.document.write('</scr' + 'ipt>');
+            htmlWindow.document.write('</body></html>');
+            htmlWindow.document.close();
+        });
+    });
+    </script>
+<script>
+    (function() {
+        function initDashboardEmailPicker() {
+            const existingEmailBtn = document.getElementById('emailDashboardBtn');
+            const dashboardEmailModalEl = document.getElementById('dashboardEmailModal');
+            const dashboardEmailFromDate = document.getElementById('dashboardEmailFromDate');
+            const dashboardEmailToDate = document.getElementById('dashboardEmailToDate');
+            const dashboardEmailCategoryGroup = document.getElementById('dashboardEmailCategoryGroup');
+            const dashboardEmailTeamEntity = document.getElementById('dashboardEmailTeamEntity');
+            const dashboardEmailTeamGns = document.getElementById('dashboardEmailTeamGns');
+            const dashboardEmailIncludeEfficiencies = document.getElementById('dashboardEmailIncludeEfficiencies');
+            const generateDashboardEmailBtn = document.getElementById('generateDashboardEmailBtn');
+
+            if (!existingEmailBtn || !dashboardEmailModalEl || !dashboardEmailFromDate || !dashboardEmailToDate || !generateDashboardEmailBtn) {
+                return;
+            }
+
+            const emailBtn = existingEmailBtn.cloneNode(true);
+            existingEmailBtn.replaceWith(emailBtn);
+
+            const dashboardEmailModal = new bootstrap.Modal(dashboardEmailModalEl);
+
+            function normalizeRecordDate(rawValue) {
+                const value = (rawValue || '').trim();
+                if (!value) return null;
+                if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return new Date(value + 'T00:00:00');
+                if (/^\d{4}-\d{2}$/.test(value)) return new Date(value + '-01T00:00:00');
+                if (/^\d{4}$/.test(value)) return new Date(value + '-01-01T00:00:00');
+                return null;
+            }
+
+            function formatDateForDisplay(value) {
+                return new Date(value + 'T00:00:00').toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            }
+
+            function syncDashboardEmailCategoryState() {
+                const includeProjectList = !dashboardEmailIncludeEfficiencies || dashboardEmailIncludeEfficiencies.value !== 'N';
+                if (dashboardEmailCategoryGroup) {
+                    dashboardEmailCategoryGroup.classList.toggle('is-disabled', !includeProjectList);
+                }
+                if (dashboardEmailTeamEntity) {
+                    dashboardEmailTeamEntity.disabled = !includeProjectList;
+                }
+                if (dashboardEmailTeamGns) {
+                    dashboardEmailTeamGns.disabled = !includeProjectList;
+                }
+            }
+
+            function toNumber(value) {
+                const parsed = parseFloat(String(value || '').replace(/[$,]/g, '').trim());
+                return isNaN(parsed) ? 0 : parsed;
+            }
+
+            function roundUp2(value) {
+                return Math.ceil(value * 100) / 100;
+            }
+
+            function buildMetricsForRange(sptRows, effRows) {
+                const headcountValue = toNumber(document.querySelector('.metric-card .metric-value') ? document.querySelector('.metric-card .metric-value').textContent : '0');
+                let totalFte = 0;
+                let totalInflow = 0;
+                let totalOutflow = 0;
+                let gnsEffTotal = 0;
+                let entityEffTotal = 0;
+
+                sptRows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    const fte = toNumber(cells[2] ? cells[2].textContent : '0');
+                    const status = cells[8] ? cells[8].textContent.trim() : '';
+                    totalFte += fte;
+                    if (status === 'Inflow') totalInflow += fte;
+                    if (status === 'Outflow') totalOutflow += Math.abs(fte);
+                });
+
+                effRows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    const status = cells[4] ? cells[4].textContent.trim() : '';
+                    if (status === 'Discontinued') return;
+                    const generatedCapacity = toNumber(cells[2] ? cells[2].textContent : '0');
+                    const team = cells[10] ? cells[10].textContent.trim() : '';
+                    if (team === 'GNS') gnsEffTotal += generatedCapacity;
+                    else entityEffTotal += generatedCapacity;
+                });
+
+                totalFte = roundUp2(totalFte);
+                totalInflow = roundUp2(totalInflow);
+                totalOutflow = roundUp2(totalOutflow);
+                gnsEffTotal = roundUp2(gnsEffTotal);
+                entityEffTotal = roundUp2(entityEffTotal);
+                const diff = roundUp2(headcountValue - totalFte);
+                const staffingTitle = diff > 0 ? 'OVERSTAFFED' : 'UNDERSTAFFED';
+
+                return [
+                    { label: 'Headcount', value: headcountValue.toFixed(2) },
+                    { label: 'FTE Requirement', value: totalFte.toFixed(2) },
+                    { label: 'Total Inflow', value: totalInflow.toFixed(2) },
+                    { label: 'Outflow', value: totalOutflow.toFixed(2) },
+                    { label: staffingTitle, value: diff.toFixed(2) },
+                    { label: 'GNS Efficiencies', value: gnsEffTotal.toFixed(2) },
+                    { label: 'Entity Efficiencies', value: entityEffTotal.toFixed(2) }
+                ];
+            }
+
+            function rowMatchesRange(rowDate, fromDate, toDate) {
+                return !!rowDate && rowDate >= fromDate && rowDate <= toDate;
+            }
+
+            function generateDashboardEmailReport() {
+                const fromValue = dashboardEmailFromDate.value;
+                const toValue = dashboardEmailToDate.value;
+                const selectedTeams = [];
+                if (dashboardEmailTeamEntity && dashboardEmailTeamEntity.checked) selectedTeams.push('Entity');
+                if (dashboardEmailTeamGns && dashboardEmailTeamGns.checked) selectedTeams.push('GNS');
+                const includeEfficiencies = !dashboardEmailIncludeEfficiencies || dashboardEmailIncludeEfficiencies.value !== 'N';
+                if (!fromValue || !toValue) {
+                    alert('Please select both From and To dates.');
+                    return;
+                }
+                if (includeEfficiencies && selectedTeams.length === 0) {
+                    alert('Please select at least one Category for the project list.');
+                    return;
+                }
+
+                const fromDate = new Date(fromValue + 'T00:00:00');
+                const toDate = new Date(toValue + 'T23:59:59');
+                if (fromDate > toDate) {
+                    alert('The From date must be earlier than or equal to the To date.');
+                    return;
+                }
+
+                let htmlWindow = window.open('', '_blank', 'width=900,height=700');
+                if (!htmlWindow) {
+                    alert('Unable to open report window. Please allow pop-ups for this site.');
+                    return;
+                }
+
+                const sptTable = document.querySelectorAll('table.table-bordered')[0];
+                const effTable = document.querySelectorAll('table.table-bordered')[1];
+                if (!sptTable || !effTable) {
+                    htmlWindow.close();
+                    alert('Unable to generate email report because one or more dashboard tables were not found.');
+                    return;
+                }
+
+                const sptRows = Array.from(sptTable.querySelectorAll('tbody tr')).filter(row => {
+                    const firstCell = row.querySelector('td');
+                    if (!firstCell) return false;
+                    return rowMatchesRange(normalizeRecordDate(firstCell.textContent), fromDate, toDate);
+                });
+
+                const effRows = Array.from(effTable.querySelectorAll('tbody tr.eff-main-row')).filter(row => {
+                    if (!includeEfficiencies) return false;
+                    const rowTeam = (row.getAttribute('data-eff-team') || '').trim();
+                    const teamMatch = selectedTeams.length === 0 || selectedTeams.includes(rowTeam);
+                    return rowMatchesRange(normalizeRecordDate(row.getAttribute('data-eff-year')), fromDate, toDate) && teamMatch;
+                });
+
+                if (!sptRows.length && (!includeEfficiencies || !effRows.length)) {
+                    htmlWindow.close();
+                    alert('No dashboard records were found for the selected date range.');
+                    return;
+                }
+
+                const subject = `NBTE Inflow/Outflow from ${fromValue} to ${toValue}`;
+                const tableStyle = 'border-collapse:collapse;width:100%;font-family:Segoe UI,Arial,sans-serif;font-size:13px;margin:20px 0;';
+                const thStyle = 'background:#0078d4;color:#fff;padding:12px;border:1px solid #ddd;text-align:left;font-weight:bold;';
+                const tdStyle = 'padding:10px 12px;border:1px solid #ddd;background:#fff;color:#333;';
+                const sectionTitleStyle = 'font-size:16px;font-weight:bold;margin:16px 0 8px 0;color:#0078d4;';
+                const metrics = buildMetricsForRange(sptRows, effRows);
+                let body = '';
+
+                body += `<div style="font-family:Segoe UI,Arial,sans-serif;font-size:14px;line-height:1.6;margin-bottom:20px;color:#333;">`;
+                body += `<p>Hello everyone,</p>`;
+                body += `<p>Please find below the NBTE inflow/outflow report covering <strong>${formatDateForDisplay(fromValue)}</strong> to <strong>${formatDateForDisplay(toValue)}</strong> for your review. The report reflects the current capacity movements and related updates within the selected range. Kindly let me know if you have any questions or require further clarification.</p>`;
+                body += `</div>`;
+
+                body += `<div style="${sectionTitleStyle}">Dashboard Metrics</div>`;
+                body += `<table style="${tableStyle}">`;
+                body += '<tr>' +
+                    `<th style="${thStyle}width:25%;">Metric</th>` +
+                    `<th style="${thStyle}width:75%;">Value</th>` +
+                    '</tr>';
+                metrics.forEach((metric, idx) => {
+                    const rowBg = idx % 2 === 0 ? '#f9f9f9' : '#fff';
+                    let valueBg = rowBg;
+                    let valueColor = '#333';
+                    if (metric.label === 'UNDERSTAFFED') {
+                        valueBg = '#ffebee';
+                        valueColor = '#d90429';
+                    } else if (metric.label === 'OVERSTAFFED') {
+                        valueBg = '#e3f2fd';
+                        valueColor = '#0074d9';
+                    }
+                    const displayValue = (metric.label === 'UNDERSTAFFED' || metric.label === 'OVERSTAFFED') ? `<strong>${metric.value}</strong>` : metric.value;
+                    body += `<tr>` +
+                        `<td style="${tdStyle}background:${rowBg};width:25%;">${metric.label}</td>` +
+                        `<td style="${tdStyle}background:${valueBg};color:${valueColor};font-weight:bold;width:75%;">${displayValue}</td>` +
+                        `</tr>`;
+                });
+                body += '</table>';
+
+                body += `<div style="${sectionTitleStyle}">SPT Table</div>`;
+                body += `<table style="${tableStyle}">`;
+                const sptHeaders = Array.from(sptTable.querySelectorAll('thead th'));
+                const sptHeaderIndices = [];
+                let sptHeaderHtml = '';
+                sptHeaders.forEach((th, idx) => {
+                    const text = th.textContent.trim();
+                    if (text !== 'Remaining FTE Capacity' && text !== 'Action') {
+                        sptHeaderIndices.push(idx);
+                        sptHeaderHtml += `<th style="${thStyle}">${text}</th>`;
+                    }
+                });
+                body += '<tr>' + sptHeaderHtml + '</tr>';
+                sptRows.forEach((row, idx) => {
+                    const rowBg = idx % 2 === 0 ? '#f9f9f9' : '#fff';
+                    const cells = Array.from(row.querySelectorAll('td'));
+                    let rowHtml = '';
+                    sptHeaderIndices.forEach(i => {
+                        rowHtml += `<td style="${tdStyle}background:${rowBg};">${cells[i].textContent.trim()}</td>`;
+                    });
+                    body += '<tr>' + rowHtml + '</tr>';
+                });
+                body += '</table>';
+
+                if (includeEfficiencies) {
+                    body += `<div style="${sectionTitleStyle}">Efficiencies</div>`;
+                    body += `<table style="${tableStyle}">`;
+                    const effHeaders = Array.from(effTable.querySelectorAll('thead th'));
+                    const effHeaderIndices = [];
+                    let effHeaderHtml = '';
+                    effHeaders.forEach((th, idx) => {
+                        const text = th.textContent.trim();
+                        if (text !== 'Action') {
+                            effHeaderIndices.push(idx);
+                            effHeaderHtml += `<th style="${thStyle}">${text === 'Team' ? 'Category' : text}</th>`;
+                        }
+                    });
+                    body += '<tr>' + effHeaderHtml + '</tr>';
+                    effRows.forEach((row, idx) => {
+                        const rowBg = idx % 2 === 0 ? '#f9f9f9' : '#fff';
+                        const cells = Array.from(row.querySelectorAll('td'));
+                        let rowHtml = '';
+                        effHeaderIndices.forEach(i => {
+                            const headerText = effHeaders[i] ? effHeaders[i].textContent.trim() : '';
+                            const cellValue = headerText === 'Team'
+                                ? ((row.getAttribute('data-eff-team') || '').trim() || (cells[i] ? cells[i].textContent.trim() : '-'))
+                                : (cells[i] ? cells[i].textContent.trim() : '-');
+                            rowHtml += `<td style="${tdStyle}background:${rowBg};">${cellValue}</td>`;
+                        });
+                        body += '<tr>' + rowHtml + '</tr>';
+                    });
+                    body += '</table>';
+                }
+
+                body += `<div style="font-family:Segoe UI,Arial,sans-serif;font-size:14px;line-height:1.6;margin-top:30px;padding-top:20px;border-top:1px solid #ddd;color:#333;">`;
+                body += `<p>Thank you</p>`;
+                body += `</div>`;
+
+                htmlWindow.document.write('<html><head><title>Email Report</title><style>');
+                htmlWindow.document.write('body { font-family: Segoe UI, Arial, sans-serif; padding: 20px; background: #f5f5f5; }');
+                htmlWindow.document.write('.header { margin-bottom: 20px; }');
+                htmlWindow.document.write('.copy-btn { padding: 12px 24px; background: #28a745; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; margin-right: 10px; }');
+                htmlWindow.document.write('.copy-btn:hover { background: #218838; }');
+                htmlWindow.document.write('.outlook-btn { padding: 12px 24px; background: #0078d4; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; text-decoration: none; display: inline-block; }');
+                htmlWindow.document.write('.outlook-btn:hover { background: #005a9e; }');
+                htmlWindow.document.write('.report-container { background: white; padding: 20px; border-radius: 5px; margin-top: 20px; }');
+                htmlWindow.document.write('.feedback { margin-top: 10px; color: #28a745; font-weight: bold; display: none; }');
+                htmlWindow.document.write('</style></head><body>');
+                htmlWindow.document.write('<div class="header">');
+                htmlWindow.document.write('<h2>NBTE Inflow-Outflow Dashboard Report</h2>');
+                htmlWindow.document.write('<button class="copy-btn" onclick="copyToClipboard()">Copy Report</button>');
+                htmlWindow.document.write('<a href="mailto:?subject=' + encodeURIComponent(subject) + '" class="outlook-btn">Open Outlook</a>');
+                htmlWindow.document.write('<div class="feedback" id="feedback">Copied to clipboard!</div>');
+                htmlWindow.document.write('</div>');
+                htmlWindow.document.write('<div class="report-container" id="reportContent">' + body + '</div>');
+                htmlWindow.document.write('<script type="text/javascript">');
+                htmlWindow.document.write('function copyToClipboard() {');
+                htmlWindow.document.write('  const reportContent = document.getElementById("reportContent").innerHTML;');
+                htmlWindow.document.write('  const blob = new Blob([reportContent], { type: "text/html" });');
+                htmlWindow.document.write('  navigator.clipboard.write([new ClipboardItem({ "text/html": blob })]).then(() => {');
+                htmlWindow.document.write('    const feedback = document.getElementById("feedback");');
+                htmlWindow.document.write('    feedback.style.display = "block";');
+                htmlWindow.document.write('    setTimeout(() => { feedback.style.display = "none"; }, 2000);');
+                htmlWindow.document.write('  }).catch(err => alert("Failed to copy: " + err));');
+                htmlWindow.document.write('}');
+                htmlWindow.document.write('</scr' + 'ipt>');
+                htmlWindow.document.write('</body></html>');
+                htmlWindow.document.close();
+
+                dashboardEmailModal.hide();
+            }
+
+            emailBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+
+                const today = new Date();
+                const yyyy = today.getFullYear();
+                const mm = String(today.getMonth() + 1).padStart(2, '0');
+                const dd = String(today.getDate()).padStart(2, '0');
+                const todayValue = `${yyyy}-${mm}-${dd}`;
+
+                if (!dashboardEmailFromDate.value) {
+                    dashboardEmailFromDate.value = todayValue;
+                }
+                if (!dashboardEmailToDate.value) {
+                    dashboardEmailToDate.value = todayValue;
+                }
+                if (dashboardEmailTeamEntity) dashboardEmailTeamEntity.checked = true;
+                if (dashboardEmailTeamGns) dashboardEmailTeamGns.checked = true;
+                if (dashboardEmailIncludeEfficiencies && !dashboardEmailIncludeEfficiencies.value) {
+                    dashboardEmailIncludeEfficiencies.value = 'Y';
+                }
+                syncDashboardEmailCategoryState();
+
+                dashboardEmailModal.show();
+            });
+
+            if (dashboardEmailIncludeEfficiencies) {
+                dashboardEmailIncludeEfficiencies.addEventListener('change', syncDashboardEmailCategoryState);
+            }
+
+            generateDashboardEmailBtn.addEventListener('click', generateDashboardEmailReport);
+        }
+
+        window.addEventListener('load', initDashboardEmailPicker);
+    })();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
